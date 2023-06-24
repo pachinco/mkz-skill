@@ -89,7 +89,6 @@ class Mkz(MycroftSkill):
         if not rclpy.utilities.ok():
             rclpy.init(args=self._args)
         self.ros = RosBridge(self)
-        sel
 
     def ros_activate(self):
         self.schedule_repeating_event(self.ros_spin_once, None, 0.1)
