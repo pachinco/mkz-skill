@@ -67,14 +67,14 @@ class Mkz(MycroftSkill):
 
     def ros_ctrl_send(self, message):
         msg = String()
-        msg.data = message.dumps(message)
+        msg.data = json.dumps(message)
         self.log.info('ros_ctrl_send: %s', msg.data)
         self.ros.pub_ctrl_snd(msg)
         rclpy.spin_once(self.ros, timeout_sec=0)
 
     def ros_hmi_send(self, message):
         msg = String()
-        msg.data = message.dumps(message)
+        msg.data = json.dumps(message)
         self.log.info('ros_hmi_send: %s', msg.data)
         self.ros.pub_hmi_snd(msg)
         rclpy.spin_once(self.ros, timeout_sec=0)
