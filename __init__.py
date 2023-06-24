@@ -50,6 +50,7 @@ class Mkz(MycroftSkill):
         self.sound_file_path = Path(__file__).parent.joinpath("sounds", "mkz-welcome-chime2.wav")
 
     def initialize(self):
+        self.uiIdx = {"none": 0, "map": 2, "addresses": 4, "rolodex": 4, "locations": 4, "status": 8, "diagnostics": 8, "control": 16, "media": 32, "music": 32, "weather": 64, "news": 128}
         self.ad={}
         self.ad["control"] = {"power": "off", "system": "off", "autonomy": "disabled", "doors": "locked", "gear": "in park"}
         self.ad["operation"] = {"power": "okay", "compute": "okay", "vehicle": "okay", "sensors": "okay", "tires": "okay", "network": "okay"}
@@ -79,7 +80,6 @@ class Mkz(MycroftSkill):
         rclpy.spin_once(self.ros, timeout_sec=0)
 
     def ros_init(self):
-        #print("MycroftSkill: ros_init");
         self.log.info("Mkz: ros_init");
         self._args=sys.argv
         self.log.info(self._args)
@@ -95,87 +95,12 @@ class Mkz(MycroftSkill):
 
     def ros_spin_once(self):
         rclpy.spin_once(self.ros, timeout_sec=0)
-        
-    #@resting_screen_handler('MKZ homescreen')
-    #def handle_homescreen(self, message):
-        #self.gui.clear()
-        #self.enclosure.display_manager.remove_active()
-        #self.log.info('Activating MKZ homescreen')
-        #self.gui.show_image("image/mkz_background_stage_day.png", override_idle=True, override_animations=True)
 
     @intent_file_handler('mkz.intent')
     def handle_demo_urban_mkz(self, message):
         self.cancel_all_repeating_events()
-        #self.ros_init()
-        #self.gui.clear()
-        #self.gui.register_handler('mkz-urban-demo-skill.route_new', self._route_new)
-        #self.gui.register_handler('mkz-urban-demo-skill.route_position', self._route_position)
-        #self.gui.register_handler('mkz-urban-demo-skill.route_next_segment', self._route_next_instruction)
-        #self.gui["uiIdx"] = -2
-        #self.gui["routeReady"] = False
-        #self.gui["routeTotalTime"] = 0
-        #self.gui["routeTotalDistance"] = 0
-        #self.gui["routeNum"] = 0
-        #self.gui["routePath"] = 0
-        #self.gui["controlIdx"] = 0
-        #self.gui["routeSegments"] = 0
-        #self.gui["routeSegment"] = 0
-        #self.gui["routeSegmentNext"] = False
-        #self.gui["routeModel"] = []
-        #self.gui["routeDistance"] = 0
-        #self.gui["routePositionLat"] = 0
-        #self.gui["routePositionLon"] = 0
-        #self.gui["routeDirection"] = 0
-        #self.gui["routeTime"] = 0
-        #self.gui["routeInstruction"] = ""
-        #self.gui["routeTimeToNext"] = 0
-        #self.gui["routeDistanceToNext"] = 0
-        #self.gui["routeNext"] = False
-        #self.gui["routeNextAnnouced"] = False
-        #self.gui["routeNextSegment"] = 0;
-        #self.gui["routeNextDistance"] = 0
-        #self.gui["routeNextPositionLat"] = 0
-        #self.gui["routeNextPositionLon"] = 0
-        #self.gui["routeNextDirection"] = 0
-        #self.gui["routeNextTime"] = ""
-        #self.gui["routeNextInstruction"] = ""
-        #self.gui["modeAutonomous"] = False
-        #self.gui["modeRoute"] = False
-        #self.gui["modeMarker"] = True
-        #self.gui["modeFollow"] = True
-        #self.gui["modeNorth"] = False
-        #self.gui["mode3D"] = True
-        #self.gui["modeTraffic"] = False
-        #self.gui["modeNight"] = False
-        #self.gui["carPositionLat"] = 0
-        #self.gui["carPositionLon"] = 0
-        #self.gui["carPosition"] = {"lat": 37.3964, "lon": -122.034}
-        #self.gui["uiButtons"] = [{"ui": "map", "idx": 1, "image": "../images/map-road.png"},
-                                  #{"ui": "car", "idx": 2, "image": "../images/mode-car.png"},
-                                  #{"ui": "config", "idx": 0, "image": "../images/sliders-solid.png"},
-                                  #{"ui": "music", "idx": 3, "image": "../images/music-solid.png"},
-                                  #{"ui": "weather", "idx": 4, "image": "../images/cloud-sun-rain-solid.png"}]
-        #self.gui["actionsList"] = []
-        #self.gui["statusList"] = [{"text": "▾ Vehicle ❌"},
-                                  #{"text": "  ▾ Doors ❌"},
-                                  #{"text": "      Front Left ❌"},
-                                  #{"text": "      Front Right ✓"},
-                                  #{"text": "      Rear Left ✓"},
-                                  #{"text": "      Rear Right ✓"},
-                                    #{"text": "▸ Sensors ✓"},
-                                    #{"text": "▸ Driver ✓"},
-                                    #{"text": "▸ Compute ✓"},
-                                    #{"text": "▸ Communication ✓"},
-                                    #{"text": "▸ Environment ✓"}]
-        #self.enclosure.display_manager.remove_active()
-        #play_proc = play_wav(str(self.sound_file_path))
-        #self.gui.show_page(str(self.mkz_home_ui), override_idle=True)
         self.speak_dialog('mkz', wait=True)
-        #self.schedule_repeating_event(self._update_display_time, None, 10)
-        #self.schedule_event(self._whats_next, 3)
         self.ros_activate()
-        #self.cluster = Cluster()
-        #self.cluster.start()
 
     @intent_file_handler('status.ad.mkz.intent')
     def handle_ad_status_mkz(self, message):
@@ -192,6 +117,11 @@ class Mkz(MycroftSkill):
             self.ad[ad_type][ad_item]=ad_value
         if (self.ad_status_announce):
             self.speak(ad_type+" status."+" the "+ad_item+" is "+ad_value, wait=True)
+
+    @intent_file_handler('hmi.show.intent')
+    def handle_show_hmi(self, message):
+        for k,v in message.data.items():
+            self.log.info('handle_show_hmi: %s:%s' % (k, v))
 
     @intent_file_handler('status.query.mkz.intent')
     def handle_query_status_mkz(self, message):
@@ -220,51 +150,8 @@ class Mkz(MycroftSkill):
                     self.speak("the "+ad_item+" is "+ad_value+".", wait=True)
 
     #def _whats_next(self):
-        #self.gui.clear()
-        #self.enclosure.display_manager.remove_active()
         #self.speak("What's next?", expect_response=True, wait=True)
-        #self.gui.show_page(str(self.mkz_list_ui))
-        #self.gui["uiIdx"] = -1
         #self.schedule_event(self._switch_config, 3)
-
-    #def _switch_config(self):
-        #self.gui["actionsList"] = []
-        #self.gui["actionsList"] = [{"text": "Power", "status": "off", "image": "../images/Power-button.png"},
-                                    #{"text": "System", "status": "off", "image": "../images/Start-button.png"},
-                                    #{"text": "Autonomy", "status": "disabled", "image": "../images/Settings-symbol.png"},
-                                    #{"text": "Doors", "status": "locked", "image": "../images/Settings-symbol.png"},
-                                    #{"text": "Gear", "status": "park", "image": "../images/Settings-symbol.png"}]
-        #self.gui["uiIdx"] = 2
-        #self.schedule_event(self._add_config, 1)
-        
-    #def _add_config(self):
-        #self.gui["uiIdx"] = 2
-        #self.schedule_event(self._back_map, 5)
-
-    #def _back_map(self):
-        #self.gui["uiIdx"] = 1
-        #self.schedule_event(self._back_config, 5)
-
-    #def _back_config(self):
-        #self.gui["uiIdx"] = 0
-        #self.schedule_event(self._back_home, 5)
-
-    #def _back_home(self):
-        #self.gui["uiIdx"] = -1
-
-    #def _blink(self):
-        #self.gui["brakeOn"] = not self.gui["brakeOn"]
-        #self.gui["blinkLeft"] = not self.gui["blinkLeft"]
-        #self.gui["blinkRight"] = not self.gui["blinkRight"]
-
-    #def _update_display_time(self):
-        #dt = datetime.now()
-        #dt_str = dt.strftime("%I:%M%p %a %b %-d")
-        #dt_str = dt_str.replace("AM","am")
-        #dt_str = dt_str.replace("PM","pm")
-        #self.log.info("datetime: "+dt_str)
-        #hh_mm = nice_time(dt, speech=False, use_24hour=False)
-        #self.gui["datetime"] = dt_str
 
     def _route_new(self, message):
         #self.route_path = 0
