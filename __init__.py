@@ -50,7 +50,7 @@ class Mkz(MycroftSkill):
         self.sound_file_path = Path(__file__).parent.joinpath("sounds", "mkz-welcome-chime2.wav")
 
     def initialize(self):
-        self.uiIdx = {"none": 0, "map": 2, "addresses": 4, "rolodex": 4, "locations": 4, "status": 8, "diagnostics": 8, "control": 16, "media": 32, "music": 32, "weather": 64, "news": 128}
+        self.uiIdx = {"none": 0, "map": 2, "addresses": 4, "rolodex": 4, "locations": 4, "status": 8, "diagnostics": 8, "control": 16, "controls": 16, "media": 32, "music": 32, "weather": 64, "news": 128}
         self.ad={}
         self.ad["control"] = {"power": "off", "system": "off", "autonomy": "disabled", "doors": "locked", "gear": "in park"}
         self.ad["operation"] = {"power": "okay", "compute": "okay", "vehicle": "okay", "sensors": "okay", "tires": "okay", "network": "okay"}
