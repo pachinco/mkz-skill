@@ -1,2 +1,3 @@
-mkz demo
-upower demo
+mkz ( | demo | activate | autonomy )
+upower ( | demo | activate | autonomy )
+activate ( | mkz | demo | autonomy | upower )
