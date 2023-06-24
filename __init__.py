@@ -124,7 +124,7 @@ class Mkz(MycroftSkill):
         for k in message.data["hmi"].split():
             self.log.info('handle_show_hmi: %s' % k)
             if k in self.uiIdx:
-                uiIdx |= v
+                uiIdx |= self.uiIdx[k]
         self.log.info('handle_show_hmi: uiIdx=%d' % uiIdx)
 
     @intent_file_handler('status.query.mkz.intent')
