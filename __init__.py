@@ -67,7 +67,7 @@ class Mkz(MycroftSkill):
 
     def ros_ctrl_send(self, message):
         msg = String()
-        msg.data = json.dumps(message)
+        msg.data = json.dumps(message, separators=(',', ':'))
         msg.data = msg.data.replace("'", '"')
         self.log.info('ros_ctrl_send: %s', msg.data)
         self.ros.pub_ctrl_snd(msg)
@@ -75,7 +75,7 @@ class Mkz(MycroftSkill):
 
     def ros_hmi_send(self, message):
         msg = String()
-        msg.data = json.dumps(message)
+        msg.data = json.dumps(message, separators=(',', ':'))
         msg.data = msg.data.replace("'", '"')
         self.log.info('ros_hmi_send: %s', msg.data)
         self.ros.pub_hmi_snd(msg)
