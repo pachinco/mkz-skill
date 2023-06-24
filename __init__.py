@@ -2,6 +2,7 @@
 import rclpy
 import sys
 import ast
+import json
 #import threading
 
 from time import strftime, localtime
@@ -19,28 +20,17 @@ class RosBridge(Node):
         super().__init__('ros')
         #self.gui = skill.gui
         self.log = skill.log
-        self.sub_hmi = self.create_subscription(String, 'skill', self.sub_skill_rcv, 10)
+        self.sub_hmi = self.create_subscription(String, 'cmd', self.sub_cmd_rcv, 10)
         self.sub_hmi  # prevent unused variable warning
         self.pub_ctrl = self.create_publisher(String, 'ctrl', 10)
         self.pub_hmi = self.create_publisher(String, 'hmi', 10)
 
-    def sub_skill_rcv(self, msg):
-        self.log.info('sub_hmi_rcv: "%s"' % msg.data)
-        #s=msg.data
-        #i=s.find("=")
-        #if i >= 0:
-            #n=s[:i]
-            #v=s[i+1:]
-            #if (type(self.gui[n])==type(str())):
-                #self.gui[n]=v
-            #elif (type(self.gui[n])==type(int())):
-                #self.gui[n]=int(v)
-            #elif (type(self.gui[n])==type(float())):
-                #self.gui[n]=float(v)
-            #elif (type(self.gui[n])==type(bool())):
-                #self.gui[n]=eval(v)
-            #else:
-                #self.log.info('sub: unknown type: %s', type(self.gui[n]))
+    def sub_cmd_rcv(self, msg):
+        self.log.info('sub_cmd_rcv: "%s"' % msg.data)
+        c = json.loads(msg.data)
+        for k,v in c.items():
+            self.log.info('pub_hmi_snd: %s:%s', (k, v))
+           
 
     def pub_ctrl_snd(self, msg):
         self.log.info('pub_ctrl_snd: %s', msg.data)
@@ -54,23 +44,12 @@ class Mkz(MycroftSkill):
     def __init__(self):
         MycroftSkill.__init__(self)
         self.sound_file_path = Path(__file__).parent.joinpath("sounds", "mkz-welcome-chime2.wav")
-        #self.mkzdemo_img = Path(__file__).parent.joinpath("images", "mkz_background_stage_day.png")
-        #self.mkzdemo_over = Path(__file__).parent.joinpath("images", "MKZ-background-frame-day.png")
-        #self.mkz_home_ui = Path(__file__).parent.joinpath("ui", "Ucenter.qml")
 
     def initialize(self):
-        #self.gui["actionsList"] = []
-        #self.gui["background"] = str(self.mkzdemo_img)
-        #self.gui["foreground"] = str(self.mkzdemo_over)
-        #self.gui["datetime"] = ""
-        #self.gui["uiIdx"] = -2
-        #self.gui["controlIdx"] = 0
         self.ad={}
         self.ad["control"] = {"power": "off", "system": "off", "autonomy": "disabled", "doors": "locked", "gear": "in park"}
         self.ad["operation"] = {"power": "okay", "compute": "okay", "vehicle": "okay", "sensors": "okay", "tires": "okay", "network": "okay"}
         self.ad_status_announce = True
-        #self.path = []
-        #self.route_path = 0
         self.ros_init()
 
     def shutdown(self):
@@ -83,15 +62,15 @@ class Mkz(MycroftSkill):
 
     def ros_ctrl_send(self, message):
         msg = String()
-        msg.data = message.data["string"]
-        #self.log.info('ros_ctrl_send: %s', msg.data)
+        msg.data = message.dumps(message)
+        self.log.info('ros_ctrl_send: %s', msg.data)
         self.ros.pub_ctrl_snd(msg)
         rclpy.spin_once(self.ros, timeout_sec=0)
 
     def ros_hmi_send(self, message):
         msg = String()
-        msg.data = message.data["string"]
-        #self.log.info('ros_ctrl_send: %s', msg.data)
+        msg.data = message.dumps(message)
+        self.log.info('ros_hmi_send: %s', msg.data)
         self.ros.pub_hmi_snd(msg)
         rclpy.spin_once(self.ros, timeout_sec=0)
 
