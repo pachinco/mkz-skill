@@ -20,6 +20,7 @@ class RosBridge(Node):
         super().__init__('ros')
         #self.gui = skill.gui
         self.log = skill.log
+        self.skill = skill
         self.sub_hmi = self.create_subscription(String, 'cmd', self.sub_cmd_rcv, 10)
         self.sub_hmi  # prevent unused variable warning
         self.pub_ctrl = self.create_publisher(String, 'ctrl', 10)
@@ -31,10 +32,9 @@ class RosBridge(Node):
         for k,v in c.items():
             self.log.info('pub_hmi_snd: %s:%s' % (k, v))
             if k == "speak":
-                self.speak(v, wait=True)
+                self.skill.speak(v, wait=True)
             elif k == "dialog":
-                self.speak_dialog(v, wait=True)
-           
+                self.skill.speak_dialog(v, wait=True)
 
     def pub_ctrl_snd(self, msg):
         self.log.info('pub_ctrl_snd: %s', msg.data)
@@ -89,11 +89,10 @@ class Mkz(MycroftSkill):
         if not rclpy.utilities.ok():
             rclpy.init(args=self._args)
         self.ros = RosBridge(self)
-        self.gui.register_handler('send.ctrl.event', self.ros_ctrl_send)
-        self.gui.register_handler('send.hmi.event', self.ros_hmi_send)
+        sel
 
     def ros_activate(self):
-        self.schedule_repeating_event(self.ros_spin_once, None, 0.2)
+        self.schedule_repeating_event(self.ros_spin_once, None, 0.1)
 
     def ros_spin_once(self):
         rclpy.spin_once(self.ros, timeout_sec=0)
