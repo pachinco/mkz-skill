@@ -121,7 +121,7 @@ class Mkz(MycroftSkill):
     @intent_file_handler('hmi.show.intent')
     def handle_show_hmi(self, message):
         uiIdx = 0
-        for k,v in message.data.items():
+        for k,v in message.data["hmi"]:
             self.log.info('handle_show_hmi: %s:%s' % (k, v))
             if k in self.uiIdx:
                 uiIdx |= v
