@@ -1,1 +1,1 @@
-show {hmi} ( | and {hmi2} ( | (and {hmi3}))
+show ({hmi} | {hmi} and {hmi2} | {hmi} and {hmi2} and {hmi3})
