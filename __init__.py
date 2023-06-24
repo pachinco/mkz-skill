@@ -128,7 +128,9 @@ class Mkz(MycroftSkill):
             if k in self.uiIdx:
                 uiIdx |= self.uiIdx[k]
         self.log.info('handle_show_hmi: uiIdx=%d' % uiIdx)
-        self.ros_hmi_send('[{"uiIdx":%d}]' % uiIdx)
+        d = String()
+        d.data = '{"uiIdx":%d}' % uiIdx
+        self.ros.pub_hmi_snd(d)
 
     @intent_file_handler('status.query.mkz.intent')
     def handle_query_status_mkz(self, message):
