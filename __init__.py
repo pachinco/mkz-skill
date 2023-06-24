@@ -30,6 +30,10 @@ class RosBridge(Node):
         c = json.loads(msg.data.replace("'", '"'))
         for k,v in c.items():
             self.log.info('pub_hmi_snd: %s:%s' % (k, v))
+            if k is "speak":
+                self.speak(v, wait=True)
+            elif k is "dialog":
+                self.speak_dialog(v, wait=True)
            
 
     def pub_ctrl_snd(self, msg):
