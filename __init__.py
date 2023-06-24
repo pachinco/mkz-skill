@@ -122,7 +122,7 @@ class Mkz(MycroftSkill):
     def handle_show_hmi(self, message):
         uiIdx = 0
         for k in message.data["hmi"]:
-            self.log.info('handle_show_hmi: %s:%s' % k)
+            self.log.info('handle_show_hmi: %s' % k)
             if k in self.uiIdx:
                 uiIdx |= v
         self.log.info('handle_show_hmi: uiIdx=%d' % uiIdx)
