@@ -27,7 +27,7 @@ class RosBridge(Node):
 
     def sub_cmd_rcv(self, msg):
         self.log.info('sub_cmd_rcv: "%s"' % msg.data)
-        c = json.loads(msg.data)
+        c = json.loads(msg.data.replace("'", '"'))
         for k,v in c.items():
             self.log.info('pub_hmi_snd: %s:%s', (k, v))
            
