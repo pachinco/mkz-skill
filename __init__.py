@@ -23,18 +23,62 @@ class RosBridge(Node):
         self.skill = skill
         self.sub_hmi = self.create_subscription(String, 'cmd', self.sub_cmd_rcv, 10)
         self.sub_hmi  # prevent unused variable warning
+        #self.sub_pop = self.create_subscription(String, 'hmi_pop', self.sub_pop_rcv, 10)
+        #self.sub_pop  # prevent unused variable warning
         self.pub_ctrl = self.create_publisher(String, 'ctrl', 10)
         self.pub_hmi = self.create_publisher(String, 'hmi', 10)
+
+    def cmd_validator(utterance):
+        return utterance in self.cmd_options
+
+    def cmd_on_fail(utterance):
+        return '%s, is not an options. Please say a valid option.' % utterance
 
     def sub_cmd_rcv(self, msg):
         self.log.info('sub_cmd_rcv: "%s"' % msg.data)
         c = json.loads(msg.data.replace("'", '"'))
         for k,v in c.items():
-            self.log.info('pub_hmi_snd: %s:%s' % (k, v))
-            if k == "speak":
+            self.log.info('sub_cmd_rcv: %s:%s' % (k, v))
+            if k == "ask":
+                if "signal" in c:
+                    signal = c["signal"]
+                else:
+                    signal = None
+                if "data" in c:
+                    data = c["data"]
+                else:
+                    data = None
+                if "retries" in c:
+                    retries = c["retries"]
+                else:
+                    retries = -1
+                if "speak" in c:
+                    speak = c["speak"]
+                elif "dialog" in c:
+                    speak = c["dialog"]
+                else:
+                    speak = ""
+                if v.lower() == "yes|no":
+                    response = self.skill.ask_yesno(speak, data=data)
+                else:
+                    self.cmd_options = c["options"].split("|")
+                    response = self.skill.get_response(c["options"], data=data, num_retries=retries, validator=cmd_validator, on_fail=cmd_on_fail)
+                self.log.info('sub_cmd_rcv: response %s:%s' % (signal, response))
+                if signal:
+                    msg = String()
+                    msg.data = '{"%s":"%s"}' % (signal, response)
+                    self.pub_ctrl_snd(msg)
+                return
+            elif k == "speak":
                 self.skill.speak(v, wait=True)
             elif k == "dialog":
                 self.skill.speak_dialog(v, wait=True)
+
+    #def sub_pop_rcv(self, msg):
+        #self.log.info('sub_pop_rcv: "%s"' % msg.data)
+        #c = json.loads(msg.data.replace("'", '"'))
+        #for k,v in c.items():
+            #self.log.info('sub_pop_rcv: %s:%s' % (k, v))
 
     def pub_ctrl_snd(self, msg):
         self.log.info('pub_ctrl_snd: %s', msg.data)
