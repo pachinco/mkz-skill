@@ -47,7 +47,7 @@ class RosBridge(Node):
         for k,v in c.items():
             self.log.info('sub_cmd_rcv: %s:%s' % (k, v))
             if k == "ask":
-                signal = None if "signal" not in v else signal = v["signal"]
+                signal = "" if "signal" not in v else signal = v["signal"]
                 data = None if "data" not in v else data = v["data"]
                 retries = 3 if "retries" not in v else retries = v["retries"]
                 dialog = "" if "dialog" not in v else dialog = v["dialog"]
