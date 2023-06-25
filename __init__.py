@@ -58,10 +58,10 @@ class RosBridge(Node):
                     speak = c["dialog"]
                 else:
                     speak = ""
-                if v.lower() == "yes|no":
+                if str(v).lower() == "yes|no":
                     response = self.skill.ask_yesno(speak, data=data)
                 else:
-                    self.cmd_options = c["options"].split("|")
+                    self.cmd_options = str(c["options"]).split("|")
                     response = self.skill.get_response(c["options"], data=data, num_retries=retries, validator=cmd_validator, on_fail=cmd_on_fail)
                 self.log.info('sub_cmd_rcv: response %s:%s' % (signal, response))
                 if signal:
