@@ -108,7 +108,7 @@ class Mkz(MycroftSkill):
         self.uiIdxStickyKeys = ["sticky", "hold", "permanent"]
         self.ui={}
         self.ui["uiIdx"] = 0
-        self.ui["uiIdx_sticky"] = 0
+        self.ui["uiIdx_Sticky"] = 0
         self.ad={}
         self.ad["control"] = {"power": "off", "system": "off", "autonomy": "disabled", "doors": "locked", "gear": "in park"}
         self.ad["operation"] = {"power": "okay", "compute": "okay", "vehicle": "okay", "sensors": "okay", "tires": "okay", "network": "okay"}
@@ -185,14 +185,14 @@ class Mkz(MycroftSkill):
             self.log.info('handle_show_hmi: %s' % k)
             if k in self.uiIdxKeys:
                 if sticky:
-                    self.ui["uiIdx_sticky"] |= self.uiIdxKeys[k]
+                    self.ui["uiIdx_Sticky"] |= self.uiIdxKeys[k]
                 else:
                     self.ui["uiIdx"] |= self.uiIdxKeys[k]
             elif k in self.uiIdxStickyKeys:
                 sticky = True
         msg = String()
-        msg.data = '{"uiIdx":%d,"uiIdx_sticky":%d}' % (self.ui["uiIdx"], self.ui["uiIdx_sticky"])
-        self.log.info('handle_show_hmi: uiIdx=%d, uiIdx_sticky=%d' % (self.ui["uiIdx"], self.ui["uiIdx_sticky"]))
+        msg.data = '{"uiIdx":%d,"uiIdx_Sticky":%d}' % (self.ui["uiIdx"], self.ui["uiIdx_Sticky"])
+        self.log.info('handle_show_hmi: uiIdx=%d, uiIdx_Sticky=%d' % (self.ui["uiIdx"], self.ui["uiIdx_Sticky"]))
         self.ros.pub_hmi_snd(msg)
 
     @intent_file_handler('status.query.mkz.intent')
