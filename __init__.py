@@ -192,7 +192,7 @@ class Mkz(MycroftSkill):
             elif k in self.uiIdxStickyKeys:
                 sticky = True
         msg = String()
-        self.speak_dialog('ok', wait=False)
+        self.speak_dialog('confirm', wait=False)
         msg.data = '{"uiIdx":%d,"uiIdx_Sticky":%d}' % (self.ui["uiIdx"], self.ui["uiIdx_Sticky"])
         self.log.info('handle_show_hmi: uiIdx=%d, uiIdx_Sticky=%d' % (self.ui["uiIdx"], self.ui["uiIdx_Sticky"]))
         self.ros.pub_hmi_snd(msg)
