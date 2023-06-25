@@ -67,7 +67,7 @@ class RosBridge(Node):
                     options = v["options"]
                 else:
                     options = ""
-                self.voice_options = options.split("|")
+                self.voice_options = options.lower().split("|")
                 if options.lower() == "yes|no":
                     while retries > 0 or retries == -1:
                         response = self.skill.ask_yesno(speak, data=data)
