@@ -21,7 +21,7 @@ class RosBridge(Node):
         #self.gui = skill.gui
         self.log = skill.log
         self.skill = skill
-        self.sub_cmd = self.create_subscription(String, 'hmi_voice', self.sub_cmd_rcv, 10)
+        self.sub_cmd = self.create_subscription(String, 'hmi_cmd', self.sub_cmd_rcv, 10)
         self.sub_cmd  # prevent unused variable warning
         #self.sub_pop = self.create_subscription(String, 'hmi_pop', self.sub_pop_rcv, 10)
         #self.sub_pop  # prevent unused variable warning
