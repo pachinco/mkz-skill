@@ -29,10 +29,14 @@ class RosBridge(Node):
         self.pub_hmi = self.create_publisher(String, 'hmi', 10)
 
     def voice_validator(self, utterance):
-        return utterance.lower() in self.voice_options
+        if utterance:
+            return utterance.lower() in self.voice_options
+        return False
 
     def voice_on_fail(self, utterance):
-        return '%s, is not an option. Please say a valid option.' % utterance
+        if utterance:
+            return '%s, is not an option. Please say a valid option.' % utterance
+        return 'Sorry I didn\'t understand. Please say a valid option.'
 
     def sub_cmd_rcv(self, msg):
         self.log.info('sub_cmd_rcv: "%s"' % msg.data)
@@ -63,6 +67,7 @@ class RosBridge(Node):
                 else:
                     options = ""
                 self.voice_options = options.split("|")
+                self.log.info('sub_cmd_rcv: options=', self.voice_options)
                 if options.lower() == "yes|no":
                     while retries > 0 or retries == -1:
                         response = self.skill.ask_yesno(speak, data=data)
