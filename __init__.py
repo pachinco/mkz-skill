@@ -186,16 +186,18 @@ class Mkz(MycroftSkill):
         for k in message.data["hmi"].split():
             self.log.info('handle_show_hmi: %s' % k)
             if k in self.uiIdxKeys:
+                if self.ui["uiIdx"] > 0:
+                    sticky = True
                 self.ui["uiIdx"] |= self.uiIdxKeys[k]
-                if sticky:
-                    self.ui["uiIdx_Sticky"] |= self.uiIdxKeys[k]
-            elif k in self.uiIdxStickyKeys:
-                sticky = True
+        if sticky:
+            self.ui["uiIdx_Sticky"] = self.ui["uiIdx"]
+            #elif k in self.uiIdxStickyKeys:
+                #sticky = True
         msg = String()
-        self.speak_dialog('confirm', wait=False)
         msg.data = '{"uiIdx":%d,"uiIdx_Sticky":%d}' % (self.ui["uiIdx"], self.ui["uiIdx_Sticky"])
         self.log.info('handle_show_hmi: uiIdx=%d, uiIdx_Sticky=%d' % (self.ui["uiIdx"], self.ui["uiIdx_Sticky"]))
         self.ros.pub_hmi_snd(msg)
+        self.speak_dialog('confirm', wait=False)
 
     @intent_file_handler('status.query.mkz.intent')
     def handle_query_status_mkz(self, message):
