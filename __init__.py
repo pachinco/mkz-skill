@@ -29,10 +29,10 @@ class RosBridge(Node):
         self.pub_hmi = self.create_publisher(String, 'hmi', 10)
 
     def voice_validator(self, utterance):
-        return utterance in self.voice_options
+        return utterance.lower() in self.voice_options
 
     def voice_on_fail(self, utterance):
-        return '%s, is not an options. Please say a valid option.' % utterance
+        return '%s, is not an option. Please say a valid option.' % utterance
 
     def sub_cmd_rcv(self, msg):
         self.log.info('sub_cmd_rcv: "%s"' % msg.data)
