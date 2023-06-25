@@ -105,7 +105,7 @@ class Mkz(MycroftSkill):
 
     def initialize(self):
         self.uiIdxKeys = {"none": 0, "map": 2, "addresses": 4, "rolodex": 4, "locations": 4, "status": 8, "diagnostics": 8, "control": 16, "controls": 16, "media": 32, "music": 32, "weather": 64, "news": 128}
-        self.uiIdxStickyKeys = ["sticky", "hold", "permanent"}
+        self.uiIdxStickyKeys = ["sticky", "hold", "permanent"]
         self.ui={}
         self.ui["uiIdx"] = 0
         self.ui["uiIdx_sticky"] = 0
