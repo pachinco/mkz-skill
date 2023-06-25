@@ -30,7 +30,9 @@ class RosBridge(Node):
 
     def voice_validator(self, utterance):
         self.log.info('voice_validator: options=%s ? %s' % (utterance, self.voice_options))
-        if utterance:
+        if self.voice_options == "":
+            return True
+        elif utterance:
             return utterance.lower() in self.voice_options
         return False
 
@@ -45,49 +47,29 @@ class RosBridge(Node):
         for k,v in c.items():
             self.log.info('sub_cmd_rcv: %s:%s' % (k, v))
             if k == "ask":
-                if "signal" in v:
-                    signal = v["signal"]
-                else:
-                    signal = None
-                if "data" in v:
-                    data = v["data"]
-                else:
-                    data = None
-                if "retries" in v:
-                    retries = v["retries"]
-                else:
-                    retries = 3
-                if "speak" in v:
-                    speak = v["speak"]
-                elif "dialog" in v:
-                    speak = v["dialog"]
-                else:
-                    speak = ""
-                if "options" in v:
-                    options = v["options"]
-                else:
-                    options = ""
-                if "confirm" in v:
-                    confirm = v["confirm"]
-                else:
-                    confirm = ""
+                signal = None if "signal" not in else signal = v["signal"]
+                data = None if "data" not in v else data = v["data"]
+                retries = 3 if "retries" not in v else retries = v["retries"]
+                dialog = "" if "dialog" not in v else dialog = v["dialog"]
+                options = "" if "options" not in v else options = v["options"]
+                confirm = None if "confirm" not in v else confirm = v["confirm"]
                 self.voice_options = options.lower().split("|")
                 if options.lower() == "yes|no":
                     while retries > 0 or retries == -1:
-                        response = self.skill.ask_yesno(speak, data=data)
+                        response = self.skill.ask_yesno(dialog, data=data)
                         if self.voice_validator(response):
                             break;
                         self.skill.speak(self.voice_on_fail(response), wait=True)
                         if retries > 0:
                             retries -= 1
                 else:
-                    response = self.skill.get_response(speak, data=data, num_retries=retries, validator=voice_validator, on_fail=voice_on_fail)
+                    response = self.skill.get_response(dialog, data=data, num_retries=retries, validator=voice_validator, on_fail=voice_on_fail)
                 self.log.info('sub_cmd_rcv: response %s:%s' % (signal, response))
                 if signal:
                     msg = String()
                     msg.data = '{"%s":"%s"}' % (signal, response)
                     self.pub_ctrl_snd(msg)
-                if response:
+                if response and confirm:
                         self.skill.speak("%s." % response, wait=True)
                         self.skill.speak_dialog(confirm, wait=True)
                 return
