@@ -102,6 +102,7 @@ class RosBridge(Node):
         for k,v in c.items():
             self.log.info('sub_ctrl_rcv: %s:%s' % (k, v))
             if k in self.ask["signal"]:
+                self.log.info('sub_ctrl_rcv: signal %s:%s' % (k, v))
                 #TODO: stop asking!
 
     def pub_ctrl_snd(self, msg):
