@@ -184,10 +184,9 @@ class Mkz(MycroftSkill):
         for k in message.data["hmi"].split():
             self.log.info('handle_show_hmi: %s' % k)
             if k in self.uiIdxKeys:
+                self.ui["uiIdx"] |= self.uiIdxKeys[k]
                 if sticky:
                     self.ui["uiIdx_Sticky"] |= self.uiIdxKeys[k]
-                else:
-                    self.ui["uiIdx"] |= self.uiIdxKeys[k]
             elif k in self.uiIdxStickyKeys:
                 sticky = True
         msg = String()
