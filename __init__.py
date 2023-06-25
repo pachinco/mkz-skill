@@ -67,6 +67,10 @@ class RosBridge(Node):
                     options = v["options"]
                 else:
                     options = ""
+                if "confirm" in v:
+                    confirm = v["confirm"]
+                else:
+                    confirm = ""
                 self.voice_options = options.lower().split("|")
                 if options.lower() == "yes|no":
                     while retries > 0 or retries == -1:
@@ -83,6 +87,9 @@ class RosBridge(Node):
                     msg = String()
                     msg.data = '{"%s":"%s"}' % (signal, response)
                     self.pub_ctrl_snd(msg)
+                if response:
+                        self.skill.speak("%s." % response, wait=True)
+                        self.skill.speak_dialog(confirm, wait=True)
                 return
             elif k == "speak":
                 self.skill.speak(v, wait=True)
