@@ -1,4 +1,4 @@
-#!/usr/bin/basj
+#!/usr/bin/bash
 git add __init__.py
 git commit -m "x"
 git push

@@ -40,29 +40,33 @@ class RosBridge(Node):
         for k,v in c.items():
             self.log.info('sub_cmd_rcv: %s:%s' % (k, v))
             if k == "ask":
-                if "signal" in c:
-                    signal = c["signal"]
+                if "signal" in v:
+                    signal = v["signal"]
                 else:
                     signal = None
-                if "data" in c:
-                    data = c["data"]
+                if "data" in v:
+                    data = v["data"]
                 else:
                     data = None
-                if "retries" in c:
-                    retries = c["retries"]
+                if "retries" in v:
+                    retries = v["retries"]
                 else:
                     retries = -1
-                if "speak" in c:
-                    speak = c["speak"]
-                elif "dialog" in c:
-                    speak = c["dialog"]
+                if "speak" in v:
+                    speak = v["speak"]
+                elif "dialog" in v:
+                    speak = v["dialog"]
                 else:
                     speak = ""
-                if str(v).lower() == "yes|no":
+                if "options" in v:
+                    options = v["options"]
+                else:
+                    options = ""
+                self.cmd_options = options.split("|")
+                if options.lower() == "yes|no":
                     response = self.skill.ask_yesno(speak, data=data)
                 else:
-                    self.cmd_options = str(c["options"]).split("|")
-                    response = self.skill.get_response(c["options"], data=data, num_retries=retries, validator=cmd_validator, on_fail=cmd_on_fail)
+                    response = self.skill.get_response(speak, data=data, num_retries=retries, validator=cmd_validator, on_fail=cmd_on_fail)
                 self.log.info('sub_cmd_rcv: response %s:%s' % (signal, response))
                 if signal:
                     msg = String()
