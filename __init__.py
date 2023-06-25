@@ -21,17 +21,17 @@ class RosBridge(Node):
         #self.gui = skill.gui
         self.log = skill.log
         self.skill = skill
-        self.sub_hmi = self.create_subscription(String, 'cmd', self.sub_cmd_rcv, 10)
-        self.sub_hmi  # prevent unused variable warning
+        self.sub_cmd = self.create_subscription(String, 'hmi_voice', self.sub_cmd_rcv, 10)
+        self.sub_cmd  # prevent unused variable warning
         #self.sub_pop = self.create_subscription(String, 'hmi_pop', self.sub_pop_rcv, 10)
         #self.sub_pop  # prevent unused variable warning
-        self.pub_ctrl = self.create_publisher(String, 'ctrl', 10)
+        self.pub_ctrl = self.create_publisher(String, 'hmi_ctrl', 10)
         self.pub_hmi = self.create_publisher(String, 'hmi', 10)
 
-    def cmd_validator(utterance):
-        return utterance in self.cmd_options
+    def voice_validator(utterance):
+        return utterance in self.voice_options
 
-    def cmd_on_fail(utterance):
+    def voice_on_fail(utterance):
         return '%s, is not an options. Please say a valid option.' % utterance
 
     def sub_cmd_rcv(self, msg):
@@ -62,17 +62,17 @@ class RosBridge(Node):
                     options = v["options"]
                 else:
                     options = ""
-                self.cmd_options = options.split("|")
+                self.voice_options = options.split("|")
                 if options.lower() == "yes|no":
                     while retries > 0 or retries == -1:
                         response = self.skill.ask_yesno(speak, data=data)
-                        if self.cmd_validator(responsse):
+                        if self.voice_validator(responsse):
                             break;
-                        self.skill.speak(self.cmd_on_fail(response), wait=True)
+                        self.skill.speak(self.voice_on_fail(response), wait=True)
                         if retries > 0:
                             retries -= 1
                 else:
-                    response = self.skill.get_response(speak, data=data, num_retries=retries, validator=cmd_validator, on_fail=cmd_on_fail)
+                    response = self.skill.get_response(speak, data=data, num_retries=retries, validator=voice_validator, on_fail=voice_on_fail)
                 self.log.info('sub_cmd_rcv: response %s:%s' % (signal, response))
                 if signal:
                     msg = String()
