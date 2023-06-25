@@ -21,19 +21,20 @@ class RosBridge(Node):
         #self.gui = skill.gui
         self.log = skill.log
         self.skill = skill
+        self.ask = {}
         self.sub_cmd = self.create_subscription(String, 'hmi_cmd', self.sub_cmd_rcv, 10)
         self.sub_cmd  # prevent unused variable warning
-        #self.sub_pop = self.create_subscription(String, 'hmi_pop', self.sub_pop_rcv, 10)
-        #self.sub_pop  # prevent unused variable warning
+        self.sub_ctrl = self.create_subscription(String, 'hmi_ctrl', self.sub_ctrl_rcv, 10)
+        self.sub_ctrl  # prevent unused variable warning
         self.pub_ctrl = self.create_publisher(String, 'hmi_ctrl', 10)
         self.pub_hmi = self.create_publisher(String, 'hmi', 10)
 
     def voice_validator(self, utterance):
-        self.log.info('voice_validator: options=%s ? %s' % (utterance, self.voice_options))
-        if self.voice_options == "":
+        self.log.info('voice_validator: options=%s ? %s' % (utterance, self.ask["options"]))
+        if self.ask["options"] == "":
             return True
         if utterance:
-            return utterance.lower() in self.voice_options
+            return utterance.lower() in self.ask["options"].split("|")
         return False
 
     def voice_on_fail(self, utterance):
@@ -48,9 +49,9 @@ class RosBridge(Node):
             self.log.info('sub_cmd_rcv: %s:%s' % (k, v))
             if k == "ask":
                 if "signal" in v:
-                    signal = v["signal"]
+                    self.ask["signal"] = v["signal"]
                 else:
-                    signal = None
+                    self.ask["signal"] = None
                 if "data" in v:
                     data = v["data"]
                 else:
@@ -64,15 +65,14 @@ class RosBridge(Node):
                 else:
                     dialog = ""
                 if "options" in v:
-                    options = v["options"]
+                    self.ask["options"] = v["options"].lower()
                 else:
-                    options = ""
+                    self.ask["options"] = ""
                 if "confirm" in v:
                     confirm = v["confirm"]
                 else:
                     confirm = None
-                self.voice_options = options.lower().split("|")
-                if options.lower() == "yes|no":
+                if self.ask["options"] == "yes|no":
                     while retries > 0 or retries == -1:
                         response = self.skill.ask_yesno(dialog, data=data)
                         if self.voice_validator(response):
@@ -82,10 +82,10 @@ class RosBridge(Node):
                             retries -= 1
                 else:
                     response = self.skill.get_response(dialog, data=data, num_retries=retries, validator=voice_validator, on_fail=voice_on_fail)
-                self.log.info('sub_cmd_rcv: response %s:%s' % (signal, response))
-                if signal:
+                self.log.info('sub_cmd_rcv: response %s:%s' % (self.ask["signal"], response))
+                if self.ask["signal"]:
                     msg = String()
-                    msg.data = '{"%s":"%s"}' % (signal, response)
+                    msg.data = '{"%s":"%s"}' % (self.ask["signal"], response)
                     self.pub_ctrl_snd(msg)
                 if response and confirm:
                         self.skill.speak("%s." % response, wait=True)
@@ -96,11 +96,13 @@ class RosBridge(Node):
             elif k == "dialog":
                 self.skill.speak_dialog(v, wait=True)
 
-    #def sub_pop_rcv(self, msg):
-        #self.log.info('sub_pop_rcv: "%s"' % msg.data)
-        #c = json.loads(msg.data.replace("'", '"'))
-        #for k,v in c.items():
-            #self.log.info('sub_pop_rcv: %s:%s' % (k, v))
+    def sub_ctrl_rcv(self, msg):
+        self.log.info('sub_ctrl_rcv: "%s"' % msg.data)
+        c = json.loads(msg.data.replace("'", '"'))
+        for k,v in c.items():
+            self.log.info('sub_ctrl_rcv: %s:%s' % (k, v))
+            if k in self.ask["signal"]:
+                TODO: stop asking!
 
     def pub_ctrl_snd(self, msg):
         self.log.info('pub_ctrl_snd: %s', msg.data)
