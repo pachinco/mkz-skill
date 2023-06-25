@@ -32,7 +32,7 @@ class RosBridge(Node):
 
     def voice_validator(self, utterance):
         self.log.info('voice_validator: options=%s ? %s' % (utterance, self.ask["options"]))
-        if self.ask["options"] == "":
+        if self.ask["response"] or self.ask["options"] == "":
             return True
         if utterance:
             return utterance.lower() in self.ask["options"].split("|")
@@ -49,6 +49,8 @@ class RosBridge(Node):
         for k,v in c.items():
             self.log.info('sub_cmd_rcv: %s:%s' % (k, v))
             if k == "ask":
+                response = None
+                self.ask["response"] = None
                 if "signal" in v:
                     self.ask["signal"] = v["signal"]
                 else:
@@ -77,21 +79,22 @@ class RosBridge(Node):
                     while retries > 0 or retries == -1:
                         response = self.skill.ask_yesno(dialog, data=data)
                         if self.voice_validator(response):
-                            break;
-                        self.skill.speak(self.voice_on_fail(response), wait=True)
-                        if retries > 0:
+                            break
+                        if retries > 1:
                             retries -= 1
+                            self.skill.speak(self.voice_on_fail(response), wait=True)
                 else:
                     response = self.skill.get_response(dialog, data=data, num_retries=retries, validator=voice_validator, on_fail=voice_on_fail)
-                self.log.info('sub_cmd_rcv: response %s:%s' % (self.ask["signal"], response))
-                if self.ask["signal"]:
-                    msg = String()
-                    msg.data = '{"%s":"%s"}' % (self.ask["signal"], response)
-                    self.pub_ctrl_snd(msg)
-                if response and confirm:
+                if response and not self.ask["response"]:
+                    self.ask["response"] = response
+                    self.log.info('sub_cmd_rcv: response %s:%s' % (self.ask["signal"], response))
+                    if self.ask["signal"]:
+                        msg = String()
+                        msg.data = '{"%s":"%s"}' % (self.ask["signal"], response)
+                        self.pub_ctrl_snd(msg)
+                    if confirm:
                         self.skill.speak("%s." % response, wait=True)
                         self.skill.speak_dialog(confirm, wait=True)
-                return
             elif k == "speak":
                 self.skill.speak(v, wait=True)
             elif k == "dialog":
@@ -103,9 +106,9 @@ class RosBridge(Node):
         for k,v in c.items():
             self.log.info('sub_ctrl_rcv: %s:%s' % (k, v))
             if k in self.ask["signal"]:
+                #TODO: stop asking!
                 self.log.info('sub_ctrl_rcv: signal %s:%s' % (k, v))
                 os.system("mycroft-say-to '%s'" % v)
-                #TODO: stop asking!
 
     def pub_ctrl_snd(self, msg):
         self.log.info('pub_ctrl_snd: %s', msg.data)
