@@ -32,7 +32,7 @@ class RosBridge(Node):
         self.log.info('voice_validator: options=%s ? %s' % (utterance, self.voice_options))
         if self.voice_options == "":
             return True
-        elif utterance:
+        if utterance:
             return utterance.lower() in self.voice_options
         return False
 
@@ -47,12 +47,30 @@ class RosBridge(Node):
         for k,v in c.items():
             self.log.info('sub_cmd_rcv: %s:%s' % (k, v))
             if k == "ask":
-                signal = "" if "signal" not in v else signal = v["signal"]
-                data = None if "data" not in v else data = v["data"]
-                retries = 3 if "retries" not in v else retries = v["retries"]
-                dialog = "" if "dialog" not in v else dialog = v["dialog"]
-                options = "" if "options" not in v else options = v["options"]
-                confirm = None if "confirm" not in v else confirm = v["confirm"]
+                if "signal" in v:
+                    signal = v["signal"]
+                else:
+                    signal = None
+                if "data" in v:
+                    data = v["data"]
+                else:
+                    data = None
+                if "retries" in v:
+                    retries = v["retries"]
+                else:
+                    retries = 3
+                if "dialog" in v:
+                    dialog = v["dialog"]
+                else:
+                    dialog = ""
+                if "options" in v:
+                    options = v["options"]
+                else:
+                    options = ""
+                if "confirm" in v:
+                    confirm = v["confirm"]
+                else:
+                    confirm = None
                 self.voice_options = options.lower().split("|")
                 if options.lower() == "yes|no":
                     while retries > 0 or retries == -1:
