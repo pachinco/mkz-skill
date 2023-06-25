@@ -3,6 +3,7 @@ import rclpy
 import sys
 import ast
 import json
+import os
 #import threading
 
 from time import strftime, localtime
@@ -103,6 +104,7 @@ class RosBridge(Node):
             self.log.info('sub_ctrl_rcv: %s:%s' % (k, v))
             if k in self.ask["signal"]:
                 self.log.info('sub_ctrl_rcv: signal %s:%s' % (k, v))
+                os.system("mycroft-say-to '%s'" % v)
                 #TODO: stop asking!
 
     def pub_ctrl_snd(self, msg):
