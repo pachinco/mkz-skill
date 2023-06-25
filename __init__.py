@@ -66,7 +66,7 @@ class RosBridge(Node):
                 if options.lower() == "yes|no":
                     while retries > 0 or retries == -1:
                         response = self.skill.ask_yesno(speak, data=data)
-                        if self.voice_validator(responsse):
+                        if self.voice_validator(response):
                             break;
                         self.skill.speak(self.voice_on_fail(response), wait=True)
                         if retries > 0:
