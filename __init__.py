@@ -64,7 +64,13 @@ class RosBridge(Node):
                     options = ""
                 self.cmd_options = options.split("|")
                 if options.lower() == "yes|no":
-                    response = self.skill.ask_yesno(speak, data=data)
+                    while retries > 0 or retries == -1:
+                        response = self.skill.ask_yesno(speak, data=data)
+                        if self.cmd_validator(responsse):
+                            break;
+                        self.skill.speak(self.cmd_on_fail(response), wait=True)
+                        if retries > 0:
+                            retries -= 1
                 else:
                     response = self.skill.get_response(speak, data=data, num_retries=retries, validator=cmd_validator, on_fail=cmd_on_fail)
                 self.log.info('sub_cmd_rcv: response %s:%s' % (signal, response))
@@ -98,7 +104,11 @@ class Mkz(MycroftSkill):
         self.sound_file_path = Path(__file__).parent.joinpath("sounds", "mkz-welcome-chime2.wav")
 
     def initialize(self):
-        self.uiIdx = {"none": 0, "map": 2, "addresses": 4, "rolodex": 4, "locations": 4, "status": 8, "diagnostics": 8, "control": 16, "controls": 16, "media": 32, "music": 32, "weather": 64, "news": 128}
+        self.uiIdxKeys = {"none": 0, "map": 2, "addresses": 4, "rolodex": 4, "locations": 4, "status": 8, "diagnostics": 8, "control": 16, "controls": 16, "media": 32, "music": 32, "weather": 64, "news": 128}
+        self.uiIdxStickyKeys = ["sticky", "hold", "permanent"}
+        self.ui={}
+        self.ui["uiIdx"] = 0
+        self.ui["uiIdx_sticky"] = 0
         self.ad={}
         self.ad["control"] = {"power": "off", "system": "off", "autonomy": "disabled", "doors": "locked", "gear": "in park"}
         self.ad["operation"] = {"power": "okay", "compute": "okay", "vehicle": "okay", "sensors": "okay", "tires": "okay", "network": "okay"}
@@ -170,15 +180,20 @@ class Mkz(MycroftSkill):
 
     @intent_file_handler('hmi.show.intent')
     def handle_show_hmi(self, message):
-        uiIdx = 0
+        sticky = False
         for k in message.data["hmi"].split():
             self.log.info('handle_show_hmi: %s' % k)
-            if k in self.uiIdx:
-                uiIdx |= self.uiIdx[k]
-        self.log.info('handle_show_hmi: uiIdx=%d' % uiIdx)
-        d = String()
-        d.data = '{"uiIdx":%d}' % uiIdx
-        self.ros.pub_hmi_snd(d)
+            if k in self.uiIdxKeys:
+                if sticky:
+                    self.ui["uiIdx_sticky"] |= self.uiIdxKeys[k]
+                else:
+                    self.ui["uiIdx"] |= self.uiIdxKeys[k]
+            elif k in self.uiIdxStickyKeys:
+                sticky = True
+        msg = String()
+        msg.data = '{"uiIdx":%d,"uiIdx_sticky":%d}' % (self.ui["uiIdx"], self.ui["uiIdx_sticky"])
+        self.log.info('handle_show_hmi: uiIdx=%d, uiIdx_sticky=%d' % (self.ui["uiIdx"], self.ui["uiIdx_sticky"]))
+        self.ros.pub_hmi_snd(msg)
 
     @intent_file_handler('status.query.mkz.intent')
     def handle_query_status_mkz(self, message):
