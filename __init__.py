@@ -29,7 +29,7 @@ class RosBridge(Node):
         self.pub_hmi = self.create_publisher(String, 'hmi', 10)
 
     def voice_validator(self, utterance):
-        self.log.info('voice_validator: options=%s ? (%s)' % (utterance, self.voice_options))
+        self.log.info('voice_validator: options=%s ? %s' % (utterance, self.voice_options))
         if utterance:
             return utterance.lower() in self.voice_options
         return False
