@@ -87,7 +87,7 @@ class RosBridge(Node):
                             if retries > 0:
                                 self.skill.speak(self.voice_on_fail(response), wait=True)
                 else:
-                    response = self.skill.get_response(dialog, data=data, num_retries=0, validator=voice_validator(), on_fail=voice_on_fail())
+                    response = self.skill.get_response(dialog, data=data, num_retries=0, validator=self.voice_validator, on_fail=self.voice_on_fail)
                 if response in self.ask["cancel"]:
                     self.log.info('sub_cmd_rcv: cancel %s:%s' % (self.ask["signal"], response))
                     self.ask["response"] = "cancel"
