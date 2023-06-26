@@ -201,6 +201,11 @@ class Mkz(MycroftSkill):
     def ros_spin_once(self):
         rclpy.spin_once(self.ros, timeout_sec=0)
 
+    def converse(self, message=None):
+        for k,v in message.items():
+            self.log.info('converse: %s:%s' % (k, v))
+        return False
+
     @intent_file_handler('mkz.intent')
     def handle_demo_urban_mkz(self, message):
         self.cancel_all_repeating_events()
