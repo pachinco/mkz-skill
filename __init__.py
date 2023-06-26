@@ -37,7 +37,7 @@ class RosBridge(Node):
         if self.ask["response"] or self.ask["options"] == "":
             return True
         if utterance:
-            return utterance.lower() in self.ask["options"].split("|")
+            return utterance in self.ask["cancel"] or utterance in self.ask["options"].split("|")
         return False
 
     def voice_on_fail(self, utterance):
