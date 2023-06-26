@@ -52,6 +52,7 @@ class RosBridge(Node):
             self.log.info('sub_cmd_rcv: %s:%s' % (k, v))
             if k == "ask":
                 response = None
+                yesno = False
                 self.ask["response"] = None
                 if "signal" in v:
                     self.ask["signal"] = v["signal"]
@@ -75,22 +76,25 @@ class RosBridge(Node):
                     confirm = None
                 if "options" in v:
                     self.ask["options"] = v["options"].lower().split("|")
+                    if v["options"].lower() == "yes|no":
+                        yesno = True
                 else:
                     break
-                if v["options"] == "yes|no":
-                    while retries > 0 or retries == -1:
+                while retries > 0 or retries == -1:
+                    if yesno:
                         response = self.skill.ask_yesno(dialog, data=data)
-                        if self.voice_validator(response):
-                            break
+                    else:
+                        response = self.skill.get_response(dialog, data=data, num_retries=0)
+                    if self.voice_validator(response):
+                        break
+                    if retries > 0:
+                        retries -= 1
                         if retries > 0:
-                            retries -= 1
-                            if retries > 0:
-                                self.skill.speak(self.voice_on_fail(response), wait=True)
-                else:
-                    response = self.skill.get_response(dialog, data=data, num_retries=retries, validator=self.voice_validator, on_fail=self.voice_on_fail)
+                            self.skill.speak(self.voice_on_fail(response), wait=True)
                 if response in self.ask["cancel"]:
                     self.log.info('sub_cmd_rcv: cancel %s:%s' % (self.ask["signal"], response))
                     self.ask["response"] = "cancel"
+                    self.skill.ros_cmd_send({"cancel":self.ask["signal"]})
                 elif response and not self.ask["response"]:
                     self.ask["response"] = response
                     self.log.info('sub_cmd_rcv: response %s:%s' % (self.ask["signal"], response))
