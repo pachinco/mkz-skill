@@ -202,8 +202,8 @@ class Mkz(MycroftSkill):
         rclpy.spin_once(self.ros, timeout_sec=0)
 
     def converse(self, message=None):
-        for k,v in message.items():
-            self.log.info('converse: %s:%s' % (k, v))
+        if message:
+            self.log.info('converse: %s' % message.data))
         return False
 
     @intent_file_handler('mkz.intent')
