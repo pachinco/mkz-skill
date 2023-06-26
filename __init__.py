@@ -203,7 +203,7 @@ class Mkz(MycroftSkill):
 
     def converse(self, message=None):
         if message:
-            self.log.info('converse: %s' % message.data))
+            self.log.info('converse: %s' % message.data)
         return False
 
     @intent_file_handler('mkz.intent')
