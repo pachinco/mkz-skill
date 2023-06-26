@@ -33,11 +33,11 @@ class RosBridge(Node):
         self.pub_hmi = self.create_publisher(String, 'hmi', 5)
 
     def voice_validator(self, utterance):
-        self.log.info('voice_validator: options=%s ? %s' % (utterance, self.ask["options"]))
+        self.log.info('voice_validator: options=%s ? %s / %s' % (utterance, self.ask["options"], self.ask["cancel"]))
         if self.ask["response"] or self.ask["options"] == "":
             return True
         if utterance:
-            return utterance in self.ask["cancel"] or utterance in self.ask["options"].split("|")
+            return utterance in self.ask["cancel"] or utterance in self.ask["options"]
         return False
 
     def voice_on_fail(self, utterance):
@@ -56,7 +56,7 @@ class RosBridge(Node):
                 if "signal" in v:
                     self.ask["signal"] = v["signal"]
                 else:
-                    self.ask["signal"] = None
+                    break
                 if "data" in v:
                     data = v["data"]
                 else:
@@ -69,15 +69,15 @@ class RosBridge(Node):
                     dialog = v["dialog"]
                 else:
                     dialog = ""
-                if "options" in v:
-                    self.ask["options"] = v["options"].lower()
-                else:
-                    self.ask["options"] = ""
                 if "confirm" in v:
                     confirm = v["confirm"]
                 else:
                     confirm = None
-                if self.ask["options"] == "yes|no":
+                if "options" in v:
+                    self.ask["options"] = v["options"].lower().split("|")
+                else:
+                    break
+                if v["options"] == "yes|no":
                     while retries > 0 or retries == -1:
                         response = self.skill.ask_yesno(dialog, data=data)
                         if self.voice_validator(response):
