@@ -93,10 +93,10 @@ class RosBridge(Node):
                             self.skill.speak(self.voice_on_fail(response), wait=True)
                 if response in self.ask["cancel"]:
                     self.log.info('sub_cmd_rcv: cancel %s:%s' % (self.ask["signal"], response))
-                    self.ask["response"] = "cancel"
-                    self.skill.ros_cmd_send({"cancel":self.ask["signal"]})
-                elif response and not self.ask["response"]:
-                    self.ask["response"] = response
+                    response = "cancel"
+                    #self.skill.ros_cmd_send({"cancel":self.ask["signal"]})
+                if response and not self.ask["response"]:
+                    #self.ask["response"] = response
                     self.log.info('sub_cmd_rcv: response %s:%s' % (self.ask["signal"], response))
                     if self.ask["signal"]:
                         msg = String()
