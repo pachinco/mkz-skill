@@ -23,12 +23,14 @@ class RosBridge(Node):
         self.log = skill.log
         self.skill = skill
         self.ask = {}
-        self.sub_cmd = self.create_subscription(String, 'hmi_cmd', self.sub_cmd_rcv, 10)
+        self.ask["cancel"] = ["cancel", "shut up", "stop"]
+        self.sub_cmd = self.create_subscription(String, 'hmi_cmd', self.sub_cmd_rcv, 5)
         self.sub_cmd  # prevent unused variable warning
-        self.sub_ctrl = self.create_subscription(String, 'hmi_ctrl', self.sub_ctrl_rcv, 10)
+        self.sub_ctrl = self.create_subscription(String, 'hmi_ctrl', self.sub_ctrl_rcv, 5)
         self.sub_ctrl  # prevent unused variable warning
-        self.pub_ctrl = self.create_publisher(String, 'hmi_ctrl', 10)
-        self.pub_hmi = self.create_publisher(String, 'hmi', 10)
+        self.pub_ctrl = self.create_publisher(String, 'hmi_ctrl', 5)
+        self.pub_cmd = self.create_publisher(String, 'hmi_cmd', 5)
+        self.pub_hmi = self.create_publisher(String, 'hmi', 5)
 
     def voice_validator(self, utterance):
         self.log.info('voice_validator: options=%s ? %s' % (utterance, self.ask["options"]))
@@ -80,12 +82,16 @@ class RosBridge(Node):
                         response = self.skill.ask_yesno(dialog, data=data)
                         if self.voice_validator(response):
                             break
-                        if retries > 1:
+                        if retries > 0:
                             retries -= 1
-                            self.skill.speak(self.voice_on_fail(response), wait=True)
+                            if retries > 0:
+                                self.skill.speak(self.voice_on_fail(response), wait=True)
                 else:
-                    response = self.skill.get_response(dialog, data=data, num_retries=retries, validator=voice_validator, on_fail=voice_on_fail)
-                if response and not self.ask["response"]:
+                    response = self.skill.get_response(dialog, data=data, num_retries=0, validator=voice_validator, on_fail=voice_on_fail)
+                if response in self.ask["cancel"]:
+                    self.log.info('sub_cmd_rcv: cancel %s:%s' % (self.ask["signal"], response))
+                    self.ask["response"] = "cancel"
+                elif response and not self.ask["response"]:
                     self.ask["response"] = response
                     self.log.info('sub_cmd_rcv: response %s:%s' % (self.ask["signal"], response))
                     if self.ask["signal"]:
@@ -99,6 +105,9 @@ class RosBridge(Node):
                 self.skill.speak(v, wait=True)
             elif k == "dialog":
                 self.skill.speak_dialog(v, wait=True)
+            elif k == "cancel":
+                self.log.info('sub_cmd_rcv: cancel "%s"' % v)
+                #self.skill.speak(v, wait=True)
 
     def sub_ctrl_rcv(self, msg):
         self.log.info('sub_ctrl_rcv: "%s"' % msg.data)
@@ -113,6 +122,10 @@ class RosBridge(Node):
     def pub_ctrl_snd(self, msg):
         self.log.info('pub_ctrl_snd: %s', msg.data)
         self.pub_ctrl.publish(msg)
+
+    def pub_cmd_snd(self, msg):
+        self.log.info('pub_cmd_snd: %s', msg.data)
+        self.pub_cmd.publish(msg)
 
     def pub_hmi_snd(self, msg):
         self.log.info('pub_hmi_snd: %s', msg.data)
@@ -142,6 +155,14 @@ class Mkz(MycroftSkill):
             self.ros.destroy_node()
         if rclpy.utilities.ok():
             rclpy.shutdown()
+
+    def ros_cmd_send(self, message):
+        msg = String()
+        msg.data = json.dumps(message, separators=(',', ':'))
+        #msg.data = msg.data.replace("'", '"')
+        self.log.info('ros_cmd_send: %s', msg.data)
+        self.ros.pub_cmd_snd(msg)
+        rclpy.spin_once(self.ros, timeout_sec=0)
 
     def ros_ctrl_send(self, message):
         msg = String()
