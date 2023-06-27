@@ -119,7 +119,7 @@ class Mkz(MycroftSkill):
         self.schedule_repeating_event(self.rclpy_spin_once, None, 0.1)
 
     def rclpy_spin_once(self):
-        rclpy.spin_once(self, timeout_sec=0)
+        rclpy.spin_once(self.ros, timeout_sec=0)
 
     def initialize(self):
         self.log.info("skill.initialize");
