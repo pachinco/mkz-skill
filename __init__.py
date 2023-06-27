@@ -41,7 +41,7 @@ class RosBridge(Node):
         for k,v in c.items():
             self.log.info('ros.sub_cmd_rcv: %s:%s' % (k, v))
             if k == "ask":
-                if not self.skill.ask_options(v):
+                if not self.skill.voice_ask_options(v):
                     break
             elif k == "speak":
                 self.skill.speak(v)
@@ -55,9 +55,9 @@ class RosBridge(Node):
         c = json.loads(msg.data.replace("'", '"'))
         for k,v in c.items():
             self.log.info('ros.sub_ctrl_rcv: %s:%s' % (k, v))
-            if k in self.ask["signal"]:
-                #TODO: stop asking!
-                self.log.info('ros.sub_ctrl_rcv: signal %s:%s' % (k, v))
+            if self.skill.ask:
+                self.skill.voice_ask_cancel(v)
+                #self.log.info('ros.sub_ctrl_rcv: signal %s:%s' % (k, v))
 
     def pub_ctrl_snd(self, msg):
         self.log.info('ros.pub_ctrl_snd: %s', msg.data)
@@ -202,11 +202,11 @@ class Mkz(MycroftSkill):
     def voice_ask_cancel(self, v):
         self.log.info('skill.voice_ask_cancel: "%s"' % v)
         if "signal" in self.ask:
-            if v == self.ask["signal"]:
+            if self.ask["signal"] == v:
                 self.ask = {}
 
-    def ask_options(self, v):
-        self.log.info('skill.ask_options: %s' % v)
+    def voice_ask_options(self, v):
+        self.log.info('skill.voice_ask_options: %s' % v)
         self.ask = v
         self.ask["response"] = None
         if not "retries" in self.ask:
