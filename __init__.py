@@ -169,7 +169,9 @@ class Mkz(MycroftSkill):
                         self.ask["retries"] -= 1
                         self.speak("Please say a valid option.", expect_response=True)
             else:
+                self.log.info('skill.converse: no self.ask %d' % self.ask_converse)
                 if self.ask_converse:
+                    self.log.info('skill.converse: remotely cancelled')
                     self.ask_converse = False
                     return True
         return False
