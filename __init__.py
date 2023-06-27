@@ -155,6 +155,7 @@ class Mkz(MycroftSkill):
                     self.log.info('skill.converse: cancel %s:%s' % (self.ask["signal"], response))
                     response = "cancel"
                     self.ros.send_cmd_data({"cancel": self.ask["signal"]})
+                    return True
                 elif response in self.ask["options"]:
                     self.log.info('skill.converse: response %s:%s' % (self.ask["signal"], response))
                     self.ros.send_cmd_data({self.ask["signal"]: response})
@@ -163,9 +164,10 @@ class Mkz(MycroftSkill):
                         self.speak_dialog(self.ask["confirm"], wait=True)
                 else:
                     self.speak("%s, is not an option." % response)
-                if response != "cancel" and self.ask["retries"] > 0:
+                if self.ask["retries"] > 0:
                     self.ask["retries"] -= 1
                     self.speak("Please say a valid option.", expect_response=True)
+                    return True
             else:
                 self.log.info('skill.converse: no question (%d)' % self.ask_converse)
                 if self.ask_converse:
