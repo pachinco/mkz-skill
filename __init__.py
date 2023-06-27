@@ -130,6 +130,7 @@ class Mkz(MycroftSkill):
         self.ui["uiIdx_Sticky"] = 0
         self.ask = {}
         self.ask_cancel = ["cancel", "shut up", "stop"]
+        self.ask_expect = False
         self.ad={}
         self.ad["control"] = {"power": "off", "system": "off", "autonomy": "disabled", "doors": "locked", "gear": "in park"}
         self.ad["operation"] = {"power": "okay", "compute": "okay", "vehicle": "okay", "sensors": "okay", "tires": "okay", "network": "okay"}
@@ -146,27 +147,37 @@ class Mkz(MycroftSkill):
     def converse(self, message=None):
         if message:
             self.log.info('skill.converse: %s' % message.data)
-            #TODO: message.data["utterances"]
-            #if response in self.ask_cancel:
-                #self.log.info('sub_cmd_rcv: cancel %s:%s' % (self.ask["signal"], response))
-                #response = "cancel"
-                #self.skill.ros_cmd_send({"cancel":self.ask["signal"]})
-            #if response and not self.ask["response"]:
-                #self.ask["response"] = response
-                #self.log.info('sub_cmd_rcv: response %s:%s' % (self.ask["signal"], response))
-                #if self.ask["signal"]:
-                    #msg = String()
-                    #msg.data = '{"%s":"%s"}' % (self.ask["signal"], response)
-                    #self.pub_ctrl_snd(msg)
-                #if confirm:
-                    #self.skill.speak("%s." % response, wait=True)
-                    #self.skill.speak_dialog(confirm, wait=True)
+            if self.ask:
+                response = message.data["utterances"]
+                if response and voice_validator(response):
+                    if response in self.ask_cancel:
+                        self.log.info('skill.converse: cancel %s:%s' % (self.ask["signal"], response))
+                        response = "cancel"
+                        self.ros.send_cmd_data({"cancel": self.ask["signal"]})
+                    if response:
+                        self.log.info('skill.converse: response %s:%s' % (self.ask["signal"], response))
+                        self.ros.send_cmd_data({self.ask["signal"]: response})
+                        if "confirm" in self.ask:
+                            self.skill.speak("%s." % response, wait=True)
+                            self.skill.speak_dialog(self.ask["confirm"], wait=True)
+                else:
+                    if response:
+                        self.skill.speak("%s, is not an option." % response, wait=True)
+                    else:
+                        self.skill.speak("Sorry I didn\'t understand." % response, wait=True)
+                    if self.ask["retries"] > 0:
+                        self.ask["retries"] -= 1
+                        self.skill.speak("Please say a valid option.")
+            else:
+                if self.ask_converse:
+                    self.ask_converse = False
+                    return True
         return False
 
     def voice_validator(self, utterance):
         self.log.info('skill.voice_validator: options=%s ? %s / %s' % (utterance, self.ask["options"], self.ask_cancel))
-        if self.ask["response"] or self.ask["options"] == "":
-            return True
+        #if self.ask["response"] or self.ask["options"] == "":
+            #return True
         if utterance:
             return utterance in self.ask_cancel or utterance in self.ask["options"]
         return False
@@ -198,13 +209,14 @@ class Mkz(MycroftSkill):
             self.ask["options"] = v["options"].lower().split("|")
         else:
             return False
+        self.ask_converse = True
         if "speak" in self.ask:
             self.speak(self.ask["dialog"], expect_response=True)
         elif "dialog" in self.ask:
             self.speak_dialog(self.ask["dialog"], expect_response=True)
         else:
-            return False
-        return True
+            self.ask_converse = False
+        return self.ask_converse
 
     @intent_file_handler('mkz.intent')
     def handle_demo_urban_mkz(self, message):
