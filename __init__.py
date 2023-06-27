@@ -147,7 +147,7 @@ class Mkz(MycroftSkill):
             if self.ask:
                 if not message.data["utterances"]:
                     response = None
-                    self.speak("Sorry I didn\'t understand.")
+                    self.speak_dialog("none")
                 else:
                     response = message.data["utterances"][0]
                     if response in self.ask_cancel or response in self.ask["options"]:
