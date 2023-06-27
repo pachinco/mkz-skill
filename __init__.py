@@ -148,7 +148,7 @@ class Mkz(MycroftSkill):
         if message:
             self.log.info('skill.converse: %s' % message.data)
             if self.ask:
-                response = message.data["utterances"][0]
+                response = None if not message.data["utterances"] else response = message.data["utterances"][0]
                 if not response:
                     self.speak("Sorry I didn\'t understand.")
                 elif response in self.ask_cancel or response in self.ask["options"]:
