@@ -21,8 +21,8 @@ class RosBridge(Node):
         super().__init__('ros')
         #self.gui = skill.gui
         #rclpy_init()
-        self.log = skill.log
         self.skill = skill
+        self.log = skill.log
         self.sub_cmd = self.create_subscription(String, 'hmi_cmd', self.sub_cmd_rcv, 5)
         self.sub_cmd  # prevent unused variable warning
         self.sub_ctrl = self.create_subscription(String, 'hmi_ctrl', self.sub_ctrl_rcv, 5)
@@ -107,8 +107,8 @@ class Mkz(MycroftSkill):
         MycroftSkill.__init__(self)
         self.sound_file_path = Path(__file__).parent.joinpath("sounds", "mkz-welcome-chime2.wav")
 
-    def ros_init(self):
-        self.log.info("ros.rclpy_init");
+    def rclpy_init(self):
+        self.log.info("skill.rclpy_init");
         self._args=sys.argv
         self.log.info(self._args)
         self._context = rclpy.context.Context()
@@ -129,7 +129,7 @@ class Mkz(MycroftSkill):
         self.ad["control"] = {"power": "off", "system": "off", "autonomy": "disabled", "doors": "locked", "gear": "in park"}
         self.ad["operation"] = {"power": "okay", "compute": "okay", "vehicle": "okay", "sensors": "okay", "tires": "okay", "network": "okay"}
         self.ad_status_announce = True
-        self.ros_init()
+        self.rclpy_init()
         self.ros = RosBridge(self)
 
     def shutdown(self):
@@ -192,9 +192,9 @@ class Mkz(MycroftSkill):
         else:
             return False
         if "speak" in self.ask:
-            self.skill.speak(self.ask["dialog"], expect_response=True)
+            self.speak(self.ask["dialog"], expect_response=True)
         elif "dialog" in self.ask:
-            self.skill.speak_dialog(self.ask["dialog"], expect_response=True)
+            self.speak_dialog(self.ask["dialog"], expect_response=True)
         else:
             return False
         return True
