@@ -115,7 +115,7 @@ class Mkz(MycroftSkill):
         if rclpy.utilities.ok():
             rclpy.shutdown()
 
-    def rclpy_activate(self)
+    def rclpy_activate(self):
         self.schedule_repeating_event(self.rclpy_spin_once, None, 0.1)
 
     def rclpy_spin_once(self):
