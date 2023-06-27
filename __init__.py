@@ -59,41 +59,41 @@ class RosBridge(Node):
                 self.skill.voice_ask_cancel(v)
                 #self.log.info('ros.sub_ctrl_rcv: signal %s:%s' % (k, v))
 
+    def rclpy_spin_once(self):
+        rclpy.spin_once(self, timeout_sec=0)
+
     def pub_ctrl_snd(self, msg):
         self.log.info('ros.pub_ctrl_snd: %s', msg.data)
         self.pub_ctrl.publish(msg)
-        rclpy_spin_once()
+        self.rclpy_spin_once()
 
     def pub_cmd_snd(self, msg):
         self.log.info('ros.pub_cmd_snd: %s', msg.data)
         self.pub_cmd.publish(msg)
-        rclpy_spin_once()
+        self.rclpy_spin_once()
 
     def pub_hmi_snd(self, msg):
         self.log.info('ros.pub_hmi_snd: %s', msg.data)
         self.pub_hmi.publish(msg)
-        rclpy_spin_once()
+        self.rclpy_spin_once()
 
     def send_cmd_data(self, data):
         msg = String()
         msg.data = json.dumps(data, separators=(',', ':'))
         self.log.info('ros.send_cmd_data: %s', msg.data)
         self.pub_cmd_snd(msg)
-        rclpy_spin_once()
 
     def send_ctrl_data(self, data):
         msg = String()
         msg.data = json.dumps(data, separators=(',', ':'))
         self.log.info('ros.send_ctrl_data: %s', msg.data)
         self.pub_ctrl_snd(msg)
-        rclpy_spin_once()
 
     def send_hmi_data(self, data):
         msg = String()
         msg.data = json.dumps(data, separators=(',', ':'))
         self.log.info('ros.send_hmi_data: %s', msg.data)
         self.pub_hmi_snd(msg)
-        rclpy_spin_once()
 
 class Mkz(MycroftSkill):
     def __init__(self):
@@ -116,10 +116,7 @@ class Mkz(MycroftSkill):
             rclpy.shutdown()
 
     def rclpy_activate(self):
-        self.schedule_repeating_event(self.rclpy_spin_once, None, 0.1)
-
-    def rclpy_spin_once(self):
-        rclpy.spin_once(self.ros, timeout_sec=0)
+        self.schedule_repeating_event(self.ros.rclpy_spin_once, None, 0.1)
 
     def initialize(self):
         self.log.info("skill.initialize");
