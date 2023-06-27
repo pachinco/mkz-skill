@@ -158,16 +158,16 @@ class Mkz(MycroftSkill):
                         self.log.info('skill.converse: response %s:%s' % (self.ask["signal"], response))
                         self.ros.send_cmd_data({self.ask["signal"]: response})
                         if "confirm" in self.ask:
-                            self.skill.speak("%s." % response, wait=True)
-                            self.skill.speak_dialog(self.ask["confirm"], wait=True)
+                            self.speak("%s." % response, wait=True)
+                            self.speak_dialog(self.ask["confirm"], wait=True)
                 else:
                     if response:
-                        self.skill.speak("%s, is not an option." % response, wait=True)
+                        self.speak("%s, is not an option." % response, wait=True)
                     else:
-                        self.skill.speak("Sorry I didn\'t understand." % response, wait=True)
+                        self.speak("Sorry I didn\'t understand." % response, wait=True)
                     if self.ask["retries"] > 0:
                         self.ask["retries"] -= 1
-                        self.skill.speak("Please say a valid option.")
+                        self.speak("Please say a valid option.")
             else:
                 if self.ask_converse:
                     self.ask_converse = False
