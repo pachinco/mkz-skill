@@ -20,10 +20,9 @@ class RosBridge(Node):
     def __init__(self, skill):
         super().__init__('ros')
         #self.gui = skill.gui
+        rclpy_init()
         self.log = skill.log
         self.skill = skill
-        self.ask = {}
-        self.ask["cancel"] = ["cancel", "shut up", "stop"]
         self.sub_cmd = self.create_subscription(String, 'hmi_cmd', self.sub_cmd_rcv, 5)
         self.sub_cmd  # prevent unused variable warning
         self.sub_ctrl = self.create_subscription(String, 'hmi_ctrl', self.sub_ctrl_rcv, 5)
@@ -31,109 +30,86 @@ class RosBridge(Node):
         self.pub_ctrl = self.create_publisher(String, 'hmi_ctrl', 5)
         self.pub_cmd = self.create_publisher(String, 'hmi_cmd', 5)
         self.pub_hmi = self.create_publisher(String, 'hmi', 5)
+        self.skill.schedule_repeating_event(self.rclpy_spin_once, None, 0.1)
 
-    def voice_validator(self, utterance):
-        self.log.info('voice_validator: options=%s ? %s / %s' % (utterance, self.ask["options"], self.ask["cancel"]))
-        if self.ask["response"] or self.ask["options"] == "":
-            return True
-        if utterance:
-            return utterance in self.ask["cancel"] or utterance in self.ask["options"]
-        return False
+    def rclpy_init(self):
+        self.log.info("ros.rclpy_init");
+        self._args=sys.argv
+        self.log.info(self._args)
+        self._context = rclpy.context.Context()
+        self.log.info(self._context)
+        if not rclpy.utilities.ok():
+            rclpy.init(args=self._args)
 
-    def voice_on_fail(self, utterance):
-        if utterance:
-            return '%s, is not an option. Please say a valid option.' % utterance
-        return 'Sorry I didn\'t understand. Please say a valid option.'
+    def rclpy_shutdown(self):
+        if self.ros is not None:
+            self.ros.destroy_node()
+        if rclpy.utilities.ok():
+            rclpy.shutdown()
+
+    def rclpy_spin_once(self):
+        rclpy.spin_once(self.ros, timeout_sec=0)
 
     def sub_cmd_rcv(self, msg):
-        self.log.info('sub_cmd_rcv: "%s"' % msg.data)
+        self.log.info('ros.sub_cmd_rcv: "%s"' % msg.data)
         c = json.loads(msg.data.replace("'", '"'))
         for k,v in c.items():
-            self.log.info('sub_cmd_rcv: %s:%s' % (k, v))
+            self.log.info('ros.sub_cmd_rcv: %s:%s' % (k, v))
             if k == "ask":
-                response = None
-                yesno = False
-                self.ask["response"] = None
-                if "signal" in v:
-                    self.ask["signal"] = v["signal"]
-                else:
+                if not self.skill.ask_options(v):
                     break
-                if "data" in v:
-                    data = v["data"]
-                else:
-                    data = None
-                if "retries" in v:
-                    retries = v["retries"]
-                else:
-                    retries = 3
-                if "dialog" in v:
-                    dialog = v["dialog"]
-                else:
-                    dialog = ""
-                if "confirm" in v:
-                    confirm = v["confirm"]
-                else:
-                    confirm = None
-                if "options" in v:
-                    self.ask["options"] = v["options"].lower().split("|")
-                    if v["options"].lower() == "yes|no":
-                        yesno = True
-                else:
-                    break
-                while retries > 0 or retries == -1:
-                    if yesno:
-                        response = self.skill.ask_yesno(dialog, data=data)
-                    else:
-                        response = self.skill.get_response(dialog, data=data, num_retries=0)
-                    if self.voice_validator(response):
-                        break
-                    if retries > 0:
-                        retries -= 1
-                        if retries > 0:
-                            self.skill.speak(self.voice_on_fail(response), wait=True)
-                if response in self.ask["cancel"]:
-                    self.log.info('sub_cmd_rcv: cancel %s:%s' % (self.ask["signal"], response))
-                    response = "cancel"
-                    #self.skill.ros_cmd_send({"cancel":self.ask["signal"]})
-                if response and not self.ask["response"]:
-                    #self.ask["response"] = response
-                    self.log.info('sub_cmd_rcv: response %s:%s' % (self.ask["signal"], response))
-                    if self.ask["signal"]:
-                        msg = String()
-                        msg.data = '{"%s":"%s"}' % (self.ask["signal"], response)
-                        self.pub_ctrl_snd(msg)
-                    if confirm:
-                        self.skill.speak("%s." % response, wait=True)
-                        self.skill.speak_dialog(confirm, wait=True)
             elif k == "speak":
-                self.skill.speak(v, wait=True)
+                self.skill.speak(v)
             elif k == "dialog":
-                self.skill.speak_dialog(v, wait=True)
+                self.skill.speak_dialog(v)
             elif k == "cancel":
-                self.log.info('sub_cmd_rcv: cancel "%s"' % v)
-                #self.skill.speak(v, wait=True)
+                self.skill.ask_cancel(v)
 
     def sub_ctrl_rcv(self, msg):
-        self.log.info('sub_ctrl_rcv: "%s"' % msg.data)
+        self.log.info('ros.sub_ctrl_rcv: "%s"' % msg.data)
         c = json.loads(msg.data.replace("'", '"'))
         for k,v in c.items():
-            self.log.info('sub_ctrl_rcv: %s:%s' % (k, v))
+            self.log.info('ros.sub_ctrl_rcv: %s:%s' % (k, v))
             if k in self.ask["signal"]:
                 #TODO: stop asking!
-                self.log.info('sub_ctrl_rcv: signal %s:%s' % (k, v))
+                self.log.info('ros.sub_ctrl_rcv: signal %s:%s' % (k, v))
                 #os.system("mycroft-say-to '%s'" % v)
 
     def pub_ctrl_snd(self, msg):
-        self.log.info('pub_ctrl_snd: %s', msg.data)
+        self.log.info('ros.pub_ctrl_snd: %s', msg.data)
         self.pub_ctrl.publish(msg)
+        rclpy_spin_once()
 
     def pub_cmd_snd(self, msg):
-        self.log.info('pub_cmd_snd: %s', msg.data)
+        self.log.info('ros.pub_cmd_snd: %s', msg.data)
         self.pub_cmd.publish(msg)
+        rclpy_spin_once()
 
     def pub_hmi_snd(self, msg):
-        self.log.info('pub_hmi_snd: %s', msg.data)
+        self.log.info('ros.pub_hmi_snd: %s', msg.data)
         self.pub_hmi.publish(msg)
+        rclpy_spin_once()
+
+    def send_cmd_data(self, data):
+        msg = String()
+        msg.data = json.dumps(data, separators=(',', ':'))
+        self.log.info('ros.send_cmd_data: %s', msg.data)
+        self.pub_cmd_snd(msg)
+        rclpy_spin_once()
+
+    def send_ctrl_data(self, data):
+        msg = String()
+        msg.data = json.dumps(data, separators=(',', ':'))
+        self.log.info('ros.send_ctrl_data: %s', msg.data)
+        self.pub_ctrl_snd(msg)
+        rclpy_spin_once()
+
+    def send_hmi_data(self, data):
+        msg = String()
+        msg.data = json.dumps(data, separators=(',', ':'))
+        self.log.info('ros.send_hmi_data: %s', msg.data)
+        self.pub_hmi_snd(msg)
+        rclpy_spin_once()
 
 class Mkz(MycroftSkill):
     def __init__(self):
@@ -141,70 +117,87 @@ class Mkz(MycroftSkill):
         self.sound_file_path = Path(__file__).parent.joinpath("sounds", "mkz-welcome-chime2.wav")
 
     def initialize(self):
+        self.log.info("skill.initialize");
         self.uiIdxKeys = {"none": 0, "map": 2, "maps": 3, "addresses": 4, "address": 4, "rolodex": 4, "locations": 4, "status": 8, "diagnostics": 8, "control": 16, "controls": 16, "media": 32, "music": 32, "weather": 64, "news": 128}
         self.uiIdxStickyKeys = ["sticky", "hold", "permanent"]
         self.ui={}
         self.ui["uiIdx"] = 0
         self.ui["uiIdx_Sticky"] = 0
+        self.ask = {}
+        self.ask_cancel = ["cancel", "shut up", "stop"]
         self.ad={}
         self.ad["control"] = {"power": "off", "system": "off", "autonomy": "disabled", "doors": "locked", "gear": "in park"}
         self.ad["operation"] = {"power": "okay", "compute": "okay", "vehicle": "okay", "sensors": "okay", "tires": "okay", "network": "okay"}
         self.ad_status_announce = True
-        self.ros_init()
+        self.ros = RosBridge(self)
+        #self.ros_init()
 
     def shutdown(self):
-        self.log.info("Mkz: shutdown")
+        self.log.info("skill.shutdown")
         self.cancel_all_repeating_events()
-        if self.ros is not None:
-            self.ros.destroy_node()
-        if rclpy.utilities.ok():
-            rclpy.shutdown()
-
-    def ros_cmd_send(self, message):
-        msg = String()
-        msg.data = json.dumps(message, separators=(',', ':'))
-        #msg.data = msg.data.replace("'", '"')
-        self.log.info('ros_cmd_send: %s', msg.data)
-        self.ros.pub_cmd_snd(msg)
-        rclpy.spin_once(self.ros, timeout_sec=0)
-
-    def ros_ctrl_send(self, message):
-        msg = String()
-        msg.data = json.dumps(message, separators=(',', ':'))
-        #msg.data = msg.data.replace("'", '"')
-        self.log.info('ros_ctrl_send: %s', msg.data)
-        self.ros.pub_ctrl_snd(msg)
-        rclpy.spin_once(self.ros, timeout_sec=0)
-
-    def ros_hmi_send(self, message):
-        msg = String()
-        msg.data = json.dumps(message, separators=(',', ':'))
-        #msg.data = msg.data.replace("'", '"')
-        self.log.info('ros_hmi_send: %s', msg.data)
-        self.ros.pub_hmi_snd(msg)
-        rclpy.spin_once(self.ros, timeout_sec=0)
-
-    def ros_init(self):
-        self.log.info("Mkz: ros_init");
-        self._args=sys.argv
-        self.log.info(self._args)
-        self._context = rclpy.context.Context()
-        self.log.info(self._context)
-        #rclpy.init(args=self._args, context=self._context)
-        if not rclpy.utilities.ok():
-            rclpy.init(args=self._args)
-        self.ros = RosBridge(self)
-
-    def ros_activate(self):
-        self.schedule_repeating_event(self.ros_spin_once, None, 0.1)
-
-    def ros_spin_once(self):
-        rclpy.spin_once(self.ros, timeout_sec=0)
+        self.ros.rclpy_shutdown()
 
     def converse(self, message=None):
         if message:
-            self.log.info('converse: %s' % message.data)
+            self.log.info('skill.converse: %s' % message.data)
+            #TODO: message.data["utterances"]
+            #if response in self.ask_cancel:
+                #self.log.info('sub_cmd_rcv: cancel %s:%s' % (self.ask["signal"], response))
+                #response = "cancel"
+                #self.skill.ros_cmd_send({"cancel":self.ask["signal"]})
+            #if response and not self.ask["response"]:
+                #self.ask["response"] = response
+                #self.log.info('sub_cmd_rcv: response %s:%s' % (self.ask["signal"], response))
+                #if self.ask["signal"]:
+                    #msg = String()
+                    #msg.data = '{"%s":"%s"}' % (self.ask["signal"], response)
+                    #self.pub_ctrl_snd(msg)
+                #if confirm:
+                    #self.skill.speak("%s." % response, wait=True)
+                    #self.skill.speak_dialog(confirm, wait=True)
         return False
+
+    def voice_validator(self, utterance):
+        self.log.info('skill.voice_validator: options=%s ? %s / %s' % (utterance, self.ask["options"], self.ask_cancel))
+        if self.ask["response"] or self.ask["options"] == "":
+            return True
+        if utterance:
+            return utterance in self.ask_cancel or utterance in self.ask["options"]
+        return False
+
+    def voice_on_fail(self, utterance):
+        if utterance:
+            return '%s, is not an option. Please say a valid option.' % utterance
+        return 'Sorry I didn\'t understand. Please say a valid option.'
+
+    def ask_cancel(self, v):
+        self.log.info('skill.ask_cancel: "%s"' % v)
+        if v == self.ask["signal"]:
+            self.ask = {}
+
+    def ask_options(self, v):
+        self.log.info('skill.ask_options: %s' % v)
+        self.ask = v
+        self.ask["response"] = None
+        if not "retries" in self.ask:
+            self.ask["retries"] = 3
+        if not "signal" in self.ask:
+            return False
+        if not "data" in self.ask:
+            self.ask["data"] = None
+        if not "confirm" in self.ask:
+            self.ask["confirm"] = None
+        if "options" in self.ask:
+            self.ask["options"] = v["options"].lower().split("|")
+        else:
+            return False
+        if "speak" in self.ask:
+            self.skill.speak(self.ask["dialog"], expect_response=True)
+        elif "dialog" in self.ask:
+            self.skill.speak_dialog(self.ask["dialog"], expect_response=True)
+        else:
+            return False
+        return True
 
     @intent_file_handler('mkz.intent')
     def handle_demo_urban_mkz(self, message):
@@ -239,14 +232,9 @@ class Mkz(MycroftSkill):
                 if self.ui["uiIdx"] > 0:
                     self.ui["uiIdx_Sticky"] = self.ui["uiIdx"]
                 self.ui["uiIdx"] |= self.uiIdxKeys[k]
-        #if sticky:
-            #self.ui["uiIdx_Sticky"] = self.ui["uiIdx"]
-            #elif k in self.uiIdxStickyKeys:
-                #sticky = True
-        msg = String()
-        msg.data = '{"uiIdx":%d,"uiIdx_Sticky":%d}' % (self.ui["uiIdx"], self.ui["uiIdx_Sticky"])
-        self.log.info('handle_show_hmi: uiIdx=%d, uiIdx_Sticky=%d' % (self.ui["uiIdx"], self.ui["uiIdx_Sticky"]))
-        self.ros.pub_hmi_snd(msg)
+        data = {"uiIdx":self.ui["uiIdx"], "uiIdx_Sticky":self.ui["uiIdx_Sticky"]}
+        self.log.info('skill.handle_show_hmi: %s' % data))
+        self.ros.send_hmi_data(data)
         self.speak_dialog('confirm', wait=False)
 
     @intent_file_handler('status.query.mkz.intent')
@@ -274,75 +262,6 @@ class Mkz(MycroftSkill):
                     self.speak("the "+ad_item+" are "+ad_value+".", wait=True)
                 else:
                     self.speak("the "+ad_item+" is "+ad_value+".", wait=True)
-
-    #def _whats_next(self):
-        #self.speak("What's next?", expect_response=True, wait=True)
-        #self.schedule_event(self._switch_config, 3)
-
-    def _route_new(self, message):
-        #self.route_path = 0
-        if (len(message.data["string"])>0):
-            self.speak(message.data["string"], wait=True)
-        #self.speak(self.gui["routeInstruction"])
-        self.log.info("total time: %d seconds / %d meters",self.gui["routeTime"],self.gui["routeDistance"])
-        self.log.info("position: %f,%f -> %f,%f",self.gui["routePositionLat"],self.gui["routePositionLon"],self.gui["routeNextPositionLat"],self.gui["routeNextPositionLon"])
-        self.log.info("segments: %d/%d",self.gui["routeSegment"],self.gui["routeSegments"])
-        if (self.gui["routeNext"]):
-            self.log.info("next: %d seconds",self.gui["routeTimeToNext"])
-        #self.path = ast.literal_eval(self.gui["routePath"])
-        #self.log.info("path: %d",len(self.path))
-        #self.log.info(self.path[self.route_path])
-        #self.gui["carPosition"] = {"lat": self.path[self.route_path]["lat"], "lon": self.path[self.route_path]["lon"]}
-        if (self.gui["routeNext"]):
-            self.schedule_event(self._route_next_instruction, min(self.gui["routeTimeToNext"]/3,1))
-
-    def _route_next_instruction(self):
-        self.log.info("routeDistanceToNext: %f",self.gui["routeDistanceToNext"])
-        self.log.info("routeNextDirection: %d",self.gui["routeNextDirection"])
-        self.log.info("routeNextDirection: %d",self.gui["routeNextDirection"])
-        if (self.gui["modeAutonomous"]):
-            self.speak("Next, "+self.gui["routeNextInstruction"])
-        else:
-            if (round(self.gui["routeDistanceToNext"])>0):
-                self.speak("In "+str(round(self.gui["routeDistanceToNext"]))+" meters. "+self.gui["routeNextInstruction"])
-        #self.schedule_event(self._route_wait_next_position, 1)
-
-    def _route_position(self, message):
-        lat = message.data["lat"]
-        lon = message.data["lon"]
-        #self.log.info("route position: %f %f",lat,lon)
-        self.log.info("route position: %f,%f -> %f,%f",lat,lon,self.gui["routeNextPositionLat"],self.gui["routeNextPositionLon"])
-        self.log.info("segment: %d(%d) / path: %d",message.data["segment"],self.gui["routeSegments"],message.data["path"])
-        if (self.gui["routeNext"]\
-            and not self.gui["routeNextAnnouced"]\
-            and (abs(self.gui["routeNextPositionLat"]-lat)<0.0001)\
-            and (abs(self.gui["routeNextPositionLon"]-lon)<0.0001)):
-            self.gui["routeNextAnnouced"] = True
-            self.speak(self.gui["routeNextInstruction"], wait=True)
-            self.gui["routeSegmentNext"] = not self.gui["routeSegmentNext"]
-        #else:
-            #self.schedule_event(self._route_wait_next_position, 1)
-
-    #def _route_next_path(self):
-        #self.route_path = self.route_path+1
-        #self.log.info("route_path=%d",self.route_path)
-        #if (self.route_path<len(self.path)):
-            #self.log.info(self.path[self.route_path])
-            #self.gui["carPosition"] = {"lat": self.path[self.route_path]["lat"], "lon": self.path[self.route_path]["lon"]}
-            #self.schedule_event(self._route_next_path, 1)
-        #else:
-            #route_segment = self.gui["routeSegment"]+1
-            #if (route_segment<self.gui["routeSegments"]):
-                #self.gui["routeSegment"] = route_segment
-            #if (self.gui["routeNext"]):
-                #self.schedule_event(self._route_next_segment, 2)
-            
-    #def _route_next_segment(self):
-        #self.gui["carPosition"] = {"latitude": self.gui["routeNextPositionLat"], "longitude": self.gui["routeNextPositionLon"]}
-        #if (self.gui["modeAutonomous"]):
-            #self.speak("Next, "+self.gui["routeNextInstruction"], wait=True)
-        #else:
-            #self.speak("In "+str(round(self.gui["routeDistanceToNext"]))+" meters. "+self.gui["routeNextInstruction"], wait=True)
 
 def create_skill():
     return Mkz()
