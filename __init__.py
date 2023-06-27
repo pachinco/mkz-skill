@@ -233,7 +233,7 @@ class Mkz(MycroftSkill):
                     self.ui["uiIdx_Sticky"] = self.ui["uiIdx"]
                 self.ui["uiIdx"] |= self.uiIdxKeys[k]
         data = {"uiIdx":self.ui["uiIdx"], "uiIdx_Sticky":self.ui["uiIdx_Sticky"]}
-        self.log.info('skill.handle_show_hmi: %s' % data))
+        self.log.info('skill.handle_show_hmi: %s' % data)
         self.ros.send_hmi_data(data)
         self.speak_dialog('confirm', wait=False)
 
