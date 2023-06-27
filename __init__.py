@@ -164,7 +164,7 @@ class Mkz(MycroftSkill):
                     if response:
                         self.speak("%s, is not an option." % response, wait=True)
                     else:
-                        self.speak("Sorry I didn\'t understand." % response, wait=True)
+                        self.speak("Sorry I didn\'t understand.", wait=True)
                     if self.ask["retries"] > 0:
                         self.ask["retries"] -= 1
                         self.speak("Please say a valid option.")
