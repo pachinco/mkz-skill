@@ -151,17 +151,17 @@ class Mkz(MycroftSkill):
                 response = message.data["utterances"][0]
                 if not response:
                     self.speak("Sorry I didn\'t understand.")
-                elif response in self.ask_cancel:
-                    self.log.info('skill.converse: cancel %s:%s' % (self.ask["signal"], response))
-                    response = "cancel"
-                    self.ros.send_cmd_data({"cancel": self.ask["signal"]})
-                    return True
-                elif response in self.ask["options"]:
-                    self.log.info('skill.converse: response %s:%s' % (self.ask["signal"], response))
-                    self.ros.send_cmd_data({self.ask["signal"]: response})
+                elif response in self.ask_cancel or response in self.ask["options"]:
+                    self.log.info('skill.converse: %s:%s' % (self.ask["signal"], response))
+                    if response in self.ask_cancel:
+                        response = "#cancel"
+                    #self.ros.send_cmd_data({"cancel": self.ask["signal"]})
+                    self.ros.send_ctrl_data({self.ask["signal"]: response})
+                    self.ask_converse = False
                     if "confirm" in self.ask:
-                        self.speak("%s." % response, wait=True)
-                        self.speak_dialog(self.ask["confirm"], wait=True)
+                        self.speak("%s." % response)
+                        self.speak_dialog(self.ask["confirm"])
+                    return True
                 else:
                     self.speak("%s, is not an option." % response)
                 if self.ask["retries"] > 0:
@@ -170,6 +170,9 @@ class Mkz(MycroftSkill):
                         self.speak(self.ask["dialog"], expect_response=True)
                     elif "dialog" in self.ask:
                         self.speak_dialog(self.ask["dialog"], expect_response=True)
+                else:
+                    #self.ros.send_cmd_data({"cancel": self.ask["signal"]})
+                    self.ros.send_ctrl_data({self.ask["signal"]: response})
                 return True
             else:
                 self.log.info('skill.converse: no question (%d)' % self.ask_converse)
