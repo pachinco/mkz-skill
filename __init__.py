@@ -129,7 +129,7 @@ class Mkz(MycroftSkill):
         self.ui["uiIdx"] = 0
         self.ui["uiIdx_Sticky"] = 0
         self.ask = {}
-        self.ask_cancel = ["cancel", "shut up", "stop"]
+        self.ask_cancel = ("cancel", "shut up", "stop")
         self.ask_converse = False
         self.ad={}
         self.ad["control"] = {"power": "off", "system": "off", "autonomy": "disabled", "doors": "locked", "gear": "in park"}
@@ -148,7 +148,7 @@ class Mkz(MycroftSkill):
         if message:
             self.log.info('skill.converse: %s' % message.data)
             if self.ask:
-                response = message.data["utterances"]
+                response = message.data["utterances"][0]
                 if not response:
                     self.speak("Sorry I didn\'t understand.")
                 elif response in self.ask_cancel:
@@ -166,8 +166,11 @@ class Mkz(MycroftSkill):
                     self.speak("%s, is not an option." % response)
                 if self.ask["retries"] > 0:
                     self.ask["retries"] -= 1
-                    self.speak("Please say a valid option.", expect_response=True)
-                    return True
+                    if "speak" in self.ask:
+                        self.speak(self.ask["dialog"], expect_response=True)
+                    elif "dialog" in self.ask:
+                        self.speak_dialog(self.ask["dialog"], expect_response=True)
+                return True
             else:
                 self.log.info('skill.converse: no question (%d)' % self.ask_converse)
                 if self.ask_converse:
