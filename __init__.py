@@ -136,7 +136,7 @@ class Mkz(MycroftSkill):
         self.ad_status_announce = True
         self.rclpy_init()
         self.ros = RosBridge(self)
-        self.rclpy_activate()
+        #self.rclpy_activate()
 
     def shutdown(self):
         self.log.info("skill.shutdown")
@@ -178,8 +178,9 @@ class Mkz(MycroftSkill):
 
     def voice_ask_cancel(self, v):
         self.log.info('skill.voice_ask_cancel: "%s"' % v)
-        if v == self.ask["signal"]:
-            self.ask = {}
+        if "signal" in self.ask:
+            if v == self.ask["signal"]:
+                self.ask = {}
 
     def ask_options(self, v):
         self.log.info('skill.ask_options: %s' % v)
