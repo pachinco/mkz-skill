@@ -39,7 +39,7 @@ class RosBridge(Node):
             rclpy.shutdown()
 
     def rclpy_spin_once(self):
-        rclpy.spin_once(self.ros, timeout_sec=0)
+        rclpy.spin_once(self, timeout_sec=0)
 
     def sub_cmd_rcv(self, msg):
         self.log.info('ros.sub_cmd_rcv: "%s"' % msg.data)
