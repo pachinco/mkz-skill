@@ -148,22 +148,24 @@ class Mkz(MycroftSkill):
         if message:
             self.log.info('skill.converse: %s' % message.data)
             if self.ask:
-                response = None if not message.data["utterances"] else response = message.data["utterances"][0]
-                if not response:
+                if not message.data["utterances"]:
+                    response = None
                     self.speak("Sorry I didn\'t understand.")
-                elif response in self.ask_cancel or response in self.ask["options"]:
-                    self.log.info('skill.converse: %s:%s' % (self.ask["signal"], response))
-                    if response in self.ask_cancel:
-                        response = "#cancel"
-                    #self.ros.send_cmd_data({"cancel": self.ask["signal"]})
-                    self.ros.send_ctrl_data({self.ask["signal"]: response})
-                    self.ask_converse = False
-                    if "confirm" in self.ask:
-                        self.speak("%s." % response)
-                        self.speak_dialog(self.ask["confirm"])
-                    return True
                 else:
-                    self.speak("%s, is not an option." % response)
+                    response = message.data["utterances"][0]
+                    if response in self.ask_cancel or response in self.ask["options"]:
+                        self.log.info('skill.converse: %s:%s' % (self.ask["signal"], response))
+                        if response in self.ask_cancel:
+                            response = "#cancel"
+                        #self.ros.send_cmd_data({"cancel": self.ask["signal"]})
+                        self.ros.send_ctrl_data({self.ask["signal"]: response})
+                        self.ask_converse = False
+                        if "confirm" in self.ask:
+                            self.speak("%s." % response)
+                            self.speak_dialog(self.ask["confirm"])
+                        return True
+                    else:
+                        self.speak("%s, is not an option." % response)
                 if self.ask["retries"] > 0:
                     self.ask["retries"] -= 1
                     if "speak" in self.ask:
@@ -172,7 +174,9 @@ class Mkz(MycroftSkill):
                         self.speak_dialog(self.ask["dialog"], expect_response=True)
                 else:
                     #self.ros.send_cmd_data({"cancel": self.ask["signal"]})
+                    response = "#cancel"
                     self.ros.send_ctrl_data({self.ask["signal"]: response})
+                    self.ask_converse = False
                 return True
             else:
                 self.log.info('skill.converse: no question (%d)' % self.ask_converse)
