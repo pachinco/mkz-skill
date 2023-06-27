@@ -36,12 +36,6 @@ class RosBridge(Node):
         self.pub_hmi = self.create_publisher(String, 'hmi', 5)
         self.skill.schedule_repeating_event(self.rclpy_spin_once, None, 0.1)
 
-    def rclpy_shutdown(self):
-        if self.ros is not None:
-            self.ros.destroy_node()
-        if rclpy.utilities.ok():
-            rclpy.shutdown()
-
     def rclpy_spin_once(self):
         rclpy.spin_once(self, timeout_sec=0)
 
@@ -119,6 +113,12 @@ class Mkz(MycroftSkill):
         if not rclpy.utilities.ok():
             rclpy.init(args=self._args)
 
+    def rclpy_shutdown(self):
+        if self.ros is not None:
+            self.ros.destroy_node()
+        if rclpy.utilities.ok():
+            rclpy.shutdown()
+
     def initialize(self):
         self.log.info("skill.initialize");
         self.uiIdxKeys = {"none": 0, "map": 2, "maps": 3, "addresses": 4, "address": 4, "rolodex": 4, "locations": 4, "status": 8, "diagnostics": 8, "control": 16, "controls": 16, "media": 32, "music": 32, "weather": 64, "news": 128}
@@ -138,7 +138,7 @@ class Mkz(MycroftSkill):
     def shutdown(self):
         self.log.info("skill.shutdown")
         self.cancel_all_repeating_events()
-        self.ros.rclpy_shutdown()
+        self.rclpy_shutdown()
 
     def converse(self, message=None):
         if message:
