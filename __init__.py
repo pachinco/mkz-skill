@@ -20,7 +20,7 @@ class RosBridge(Node):
     def __init__(self, skill):
         super().__init__('ros')
         #self.gui = skill.gui
-        rclpy_init()
+        #rclpy_init()
         self.log = skill.log
         self.skill = skill
         self.sub_cmd = self.create_subscription(String, 'hmi_cmd', self.sub_cmd_rcv, 5)
@@ -31,15 +31,6 @@ class RosBridge(Node):
         self.pub_cmd = self.create_publisher(String, 'hmi_cmd', 5)
         self.pub_hmi = self.create_publisher(String, 'hmi', 5)
         self.skill.schedule_repeating_event(self.rclpy_spin_once, None, 0.1)
-
-    def rclpy_init(self):
-        self.log.info("ros.rclpy_init");
-        self._args=sys.argv
-        self.log.info(self._args)
-        self._context = rclpy.context.Context()
-        self.log.info(self._context)
-        if not rclpy.utilities.ok():
-            rclpy.init(args=self._args)
 
     def rclpy_shutdown(self):
         if self.ros is not None:
@@ -116,6 +107,15 @@ class Mkz(MycroftSkill):
         MycroftSkill.__init__(self)
         self.sound_file_path = Path(__file__).parent.joinpath("sounds", "mkz-welcome-chime2.wav")
 
+    def ros_init(self):
+        self.log.info("ros.rclpy_init");
+        self._args=sys.argv
+        self.log.info(self._args)
+        self._context = rclpy.context.Context()
+        self.log.info(self._context)
+        if not rclpy.utilities.ok():
+            rclpy.init(args=self._args)
+
     def initialize(self):
         self.log.info("skill.initialize");
         self.uiIdxKeys = {"none": 0, "map": 2, "maps": 3, "addresses": 4, "address": 4, "rolodex": 4, "locations": 4, "status": 8, "diagnostics": 8, "control": 16, "controls": 16, "media": 32, "music": 32, "weather": 64, "news": 128}
@@ -129,8 +129,8 @@ class Mkz(MycroftSkill):
         self.ad["control"] = {"power": "off", "system": "off", "autonomy": "disabled", "doors": "locked", "gear": "in park"}
         self.ad["operation"] = {"power": "okay", "compute": "okay", "vehicle": "okay", "sensors": "okay", "tires": "okay", "network": "okay"}
         self.ad_status_announce = True
+        self.ros_init()
         self.ros = RosBridge(self)
-        #self.ros_init()
 
     def shutdown(self):
         self.log.info("skill.shutdown")
