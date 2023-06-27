@@ -1,26 +1,30 @@
 
-import rclpy
+# general imports
+import os
 import sys
 import ast
 import json
-import os
+from time import strftime, localtime
+from datetime import datetime
+from pathlib import Path
 #import threading
 
-from time import strftime, localtime
+# ROS imports
+import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
+# Mycroft imports
+from adapt.intent import IntentBuilder
 from mycroft import MycroftSkill, intent_file_handler
-from pathlib import Path
+from mycroft import MycroftSkill, intent_handler
 from mycroft.util import play_wav
 from mycroft.skills import resting_screen_handler
-from datetime import datetime
+from mycroft.skills.context import adds_context, removes_context
 
 class RosBridge(Node):
     def __init__(self, skill):
         super().__init__('ros')
-        #self.gui = skill.gui
-        #rclpy_init()
         self.skill = skill
         self.log = skill.log
         self.sub_cmd = self.create_subscription(String, 'hmi_cmd', self.sub_cmd_rcv, 5)
@@ -54,7 +58,7 @@ class RosBridge(Node):
             elif k == "dialog":
                 self.skill.speak_dialog(v)
             elif k == "cancel":
-                self.skill.ask_cancel(v)
+                self.skill.voice_ask_cancel(v)
 
     def sub_ctrl_rcv(self, msg):
         self.log.info('ros.sub_ctrl_rcv: "%s"' % msg.data)
@@ -64,7 +68,6 @@ class RosBridge(Node):
             if k in self.ask["signal"]:
                 #TODO: stop asking!
                 self.log.info('ros.sub_ctrl_rcv: signal %s:%s' % (k, v))
-                #os.system("mycroft-say-to '%s'" % v)
 
     def pub_ctrl_snd(self, msg):
         self.log.info('ros.pub_ctrl_snd: %s', msg.data)
@@ -170,8 +173,8 @@ class Mkz(MycroftSkill):
             return '%s, is not an option. Please say a valid option.' % utterance
         return 'Sorry I didn\'t understand. Please say a valid option.'
 
-    def ask_cancel(self, v):
-        self.log.info('skill.ask_cancel: "%s"' % v)
+    def voice_ask_cancel(self, v):
+        self.log.info('skill.voice_ask_cancel: "%s"' % v)
         if v == self.ask["signal"]:
             self.ask = {}
 
@@ -203,23 +206,23 @@ class Mkz(MycroftSkill):
     def handle_demo_urban_mkz(self, message):
         self.cancel_all_repeating_events()
         self.speak_dialog('mkz', wait=True)
-        self.ros_activate()
+        #self.ros_activate()
 
-    @intent_file_handler('status.ad.mkz.intent')
-    def handle_ad_status_mkz(self, message):
-        s=message.data["utterance"][10:]
-        i1=s.index(" ")
-        i2=s[i1+1:].index(" ")
-        ad_type = s[0:i1]
-        ad_item = s[i1+1:i1+i2+1]
-        ad_value = s[i1+i2+2:]
-        self.log.info("ad status: type="+ad_type+" item="+ad_item+" value="+ad_value)
-        if (ad_type not in self.ad.keys()):
-            self.ad[ad_type]={}
-        else:
-            self.ad[ad_type][ad_item]=ad_value
-        if (self.ad_status_announce):
-            self.speak(ad_type+" status."+" the "+ad_item+" is "+ad_value, wait=True)
+    #@intent_file_handler('status.ad.mkz.intent')
+    #def handle_ad_status_mkz(self, message):
+        #s=message.data["utterance"][10:]
+        #i1=s.index(" ")
+        #i2=s[i1+1:].index(" ")
+        #ad_type = s[0:i1]
+        #ad_item = s[i1+1:i1+i2+1]
+        #ad_value = s[i1+i2+2:]
+        #self.log.info("ad status: type="+ad_type+" item="+ad_item+" value="+ad_value)
+        #if (ad_type not in self.ad.keys()):
+            #self.ad[ad_type]={}
+        #else:
+            #self.ad[ad_type][ad_item]=ad_value
+        #if (self.ad_status_announce):
+            #self.speak(ad_type+" status."+" the "+ad_item+" is "+ad_value, wait=True)
 
     @intent_file_handler('hmi.show.intent')
     def handle_show_hmi(self, message):
@@ -237,31 +240,29 @@ class Mkz(MycroftSkill):
         self.ros.send_hmi_data(data)
         self.speak_dialog('confirm', wait=False)
 
-    @intent_file_handler('status.query.mkz.intent')
-    def handle_query_status_mkz(self, message):
-        #self.gui.clear()
-        #self.enclosure.display_manager.remove_active()
-        self.gui["uiIdx"] = 2
-        s=message.data["utterance"][10:]
-        ad_type = message.data.get('type')
-        self.log.info("query status: type="+ad_type)
-        if (ad_type not in self.ad.keys()):
-            self.speak("there is no such status to report.", wait=True)
-        elif (len(self.ad[ad_type])==0):
-            if (ad_type[-1]=="s"):
-                self.speak("there are no "+ad_type+" to report.", wait=True)
-            else:
-                self.speak("there is no "+ad_type+" to report.", wait=True)
-        else:
-            self.speak("here is the "+ad_type+" status report.", wait=True)
-            idx=0
-            for ad_item, ad_value in self.ad[ad_type].items():
-                self.gui["controlIdx"] = idx
-                idx=idx+1
-                if (ad_item[-1]=="s"):
-                    self.speak("the "+ad_item+" are "+ad_value+".", wait=True)
-                else:
-                    self.speak("the "+ad_item+" is "+ad_value+".", wait=True)
+    #@intent_file_handler('status.query.mkz.intent')
+    #def handle_query_status_mkz(self, message):
+        #self.gui["uiIdx"] = 2
+        #s=message.data["utterance"][10:]
+        #ad_type = message.data.get('type')
+        #self.log.info("query status: type="+ad_type)
+        #if (ad_type not in self.ad.keys()):
+            #self.speak("there is no such status to report.", wait=True)
+        #elif (len(self.ad[ad_type])==0):
+            #if (ad_type[-1]=="s"):
+                #self.speak("there are no "+ad_type+" to report.", wait=True)
+            #else:
+                #self.speak("there is no "+ad_type+" to report.", wait=True)
+        #else:
+            #self.speak("here is the "+ad_type+" status report.", wait=True)
+            #idx=0
+            #for ad_item, ad_value in self.ad[ad_type].items():
+                #self.gui["controlIdx"] = idx
+                #idx=idx+1
+                #if (ad_item[-1]=="s"):
+                    #self.speak("the "+ad_item+" are "+ad_value+".", wait=True)
+                #else:
+                    #self.speak("the "+ad_item+" is "+ad_value+".", wait=True)
 
 def create_skill():
     return Mkz()
