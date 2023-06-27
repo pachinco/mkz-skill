@@ -149,7 +149,7 @@ class Mkz(MycroftSkill):
             self.log.info('skill.converse: %s' % message.data)
             if self.ask:
                 response = message.data["utterances"]
-                if response and voice_validator(response):
+                if response and self.voice_validator(response):
                     if response in self.ask_cancel:
                         self.log.info('skill.converse: cancel %s:%s' % (self.ask["signal"], response))
                         response = "cancel"
