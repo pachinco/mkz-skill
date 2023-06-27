@@ -151,7 +151,7 @@ class Mkz(MycroftSkill):
                 response = message.data["utterances"]
                 if not response:
                     self.speak("Sorry I didn\'t understand.")
-                else response in self.ask_cancel:
+                elif response in self.ask_cancel:
                     self.log.info('skill.converse: cancel %s:%s' % (self.ask["signal"], response))
                     response = "cancel"
                     self.ros.send_cmd_data({"cancel": self.ask["signal"]})
