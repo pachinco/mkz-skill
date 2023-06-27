@@ -149,29 +149,27 @@ class Mkz(MycroftSkill):
             self.log.info('skill.converse: %s' % message.data)
             if self.ask:
                 response = message.data["utterances"]
-                if response and self.voice_validator(response):
-                    if response in self.ask_cancel:
-                        self.log.info('skill.converse: cancel %s:%s' % (self.ask["signal"], response))
-                        response = "cancel"
-                        self.ros.send_cmd_data({"cancel": self.ask["signal"]})
-                    if response:
-                        self.log.info('skill.converse: response %s:%s' % (self.ask["signal"], response))
-                        self.ros.send_cmd_data({self.ask["signal"]: response})
-                        if "confirm" in self.ask:
-                            self.speak("%s." % response, wait=True)
-                            self.speak_dialog(self.ask["confirm"], wait=True)
+                if not response:
+                    self.speak("Sorry I didn\'t understand.")
+                else response in self.ask_cancel:
+                    self.log.info('skill.converse: cancel %s:%s' % (self.ask["signal"], response))
+                    response = "cancel"
+                    self.ros.send_cmd_data({"cancel": self.ask["signal"]})
+                elif response in self.ask["options"]:
+                    self.log.info('skill.converse: response %s:%s' % (self.ask["signal"], response))
+                    self.ros.send_cmd_data({self.ask["signal"]: response})
+                    if "confirm" in self.ask:
+                        self.speak("%s." % response, wait=True)
+                        self.speak_dialog(self.ask["confirm"], wait=True)
                 else:
-                    if response:
-                        self.speak("%s, is not an option." % response, wait=True)
-                    else:
-                        self.speak("Sorry I didn\'t understand.", wait=True)
-                    if self.ask["retries"] > 0:
-                        self.ask["retries"] -= 1
-                        self.speak("Please say a valid option.", expect_response=True)
+                    self.speak("%s, is not an option." % response)
+                if response != "cancel" and self.ask["retries"] > 0:
+                    self.ask["retries"] -= 1
+                    self.speak("Please say a valid option.", expect_response=True)
             else:
-                self.log.info('skill.converse: no self.ask %d' % self.ask_converse)
+                self.log.info('skill.converse: no question (%d)' % self.ask_converse)
                 if self.ask_converse:
-                    self.log.info('skill.converse: remotely cancelled')
+                    self.log.info('skill.converse: already cancelled')
                     self.ask_converse = False
                     return True
         return False
