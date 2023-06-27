@@ -130,7 +130,7 @@ class Mkz(MycroftSkill):
         self.ui["uiIdx_Sticky"] = 0
         self.ask = {}
         self.ask_cancel = ["cancel", "shut up", "stop"]
-        self.ask_expect = False
+        self.ask_converse = False
         self.ad={}
         self.ad["control"] = {"power": "off", "system": "off", "autonomy": "disabled", "doors": "locked", "gear": "in park"}
         self.ad["operation"] = {"power": "okay", "compute": "okay", "vehicle": "okay", "sensors": "okay", "tires": "okay", "network": "okay"}
