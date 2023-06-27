@@ -142,7 +142,7 @@ class Mkz(MycroftSkill):
         self.rclpy_shutdown()
 
     def converse(self, message=None):
-        if message:
+        if message and self.ask_converse:
             self.log.info('skill.converse: %s' % message.data)
             if self.ask:
                 if not message.data["utterances"]:
