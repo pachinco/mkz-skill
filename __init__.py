@@ -34,10 +34,6 @@ class RosBridge(Node):
         self.pub_ctrl = self.create_publisher(String, 'hmi_ctrl', 5)
         self.pub_cmd = self.create_publisher(String, 'hmi_cmd', 5)
         self.pub_hmi = self.create_publisher(String, 'hmi', 5)
-        self.skill.schedule_repeating_event(self.rclpy_spin_once, None, 0.1)
-
-    def rclpy_spin_once(self):
-        rclpy.spin_once(self, timeout_sec=0)
 
     def sub_cmd_rcv(self, msg):
         self.log.info('ros.sub_cmd_rcv: "%s"' % msg.data)
@@ -119,6 +115,12 @@ class Mkz(MycroftSkill):
         if rclpy.utilities.ok():
             rclpy.shutdown()
 
+    def rclpy_activate(self)
+        self.schedule_repeating_event(self.rclpy_spin_once, None, 0.1)
+
+    def rclpy_spin_once(self):
+        rclpy.spin_once(self, timeout_sec=0)
+
     def initialize(self):
         self.log.info("skill.initialize");
         self.uiIdxKeys = {"none": 0, "map": 2, "maps": 3, "addresses": 4, "address": 4, "rolodex": 4, "locations": 4, "status": 8, "diagnostics": 8, "control": 16, "controls": 16, "media": 32, "music": 32, "weather": 64, "news": 128}
@@ -134,6 +136,7 @@ class Mkz(MycroftSkill):
         self.ad_status_announce = True
         self.rclpy_init()
         self.ros = RosBridge(self)
+        self.rclpy_activate()
 
     def shutdown(self):
         self.log.info("skill.shutdown")
@@ -206,7 +209,6 @@ class Mkz(MycroftSkill):
     def handle_demo_urban_mkz(self, message):
         self.cancel_all_repeating_events()
         self.speak_dialog('mkz', wait=True)
-        #self.ros_activate()
 
     #@intent_file_handler('status.ad.mkz.intent')
     #def handle_ad_status_mkz(self, message):
