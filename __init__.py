@@ -174,8 +174,8 @@ class Mkz(MycroftSkill):
                         self.speak_dialog(self.ask["dialog"], expect_response=True)
                 else:
                     #self.ros.send_cmd_data({"cancel": self.ask["signal"]})
-                    response = "#cancel"
-                    self.ros.send_ctrl_data({self.ask["signal"]: response})
+                    #response = "#cancel"
+                    #self.ros.send_ctrl_data({self.ask["signal"]: response})
                     self.ask_converse = False
                 return True
             else:
