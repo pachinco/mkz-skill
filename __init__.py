@@ -209,6 +209,7 @@ class Mkz(MycroftSkill):
     def handle_demo_urban_mkz(self, message):
         self.cancel_all_repeating_events()
         self.speak_dialog('mkz', wait=True)
+        self.rclpy_activate()
 
     #@intent_file_handler('status.ad.mkz.intent')
     #def handle_ad_status_mkz(self, message):
