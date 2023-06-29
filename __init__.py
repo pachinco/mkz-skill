@@ -177,10 +177,13 @@ class Mkz(MycroftSkill):
                     elif "dialog" in self.ask:
                         self.speak_dialog(self.ask["dialog"], expect_response=True)
                 else:
+                    self.log.info('skill.converse: out of retries'))
                     #self.ros.send_cmd_data({"cancel": self.ask["signal"]})
                     #response = "#cancel"
                     #self.ros.send_ctrl_data({self.ask["signal"]: response})
                     self.ask_converse = False
+                if self.ask_converse:
+                    self.make_active()
                 return True
             else:
                 self.log.info('skill.converse: no question (%d)' % self.ask_converse)
@@ -236,6 +239,8 @@ class Mkz(MycroftSkill):
             self.speak_dialog(self.ask["dialog"], expect_response=True)
         else:
             self.ask_converse = False
+        if self.ask_converse:
+            self.make_active()
         return self.ask_converse
 
     @intent_file_handler('mkz.intent')
