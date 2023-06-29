@@ -160,7 +160,7 @@ class Mkz(MycroftSkill):
                             response_idx = self.ask["options"].index(response)
                         #self.ros.send_cmd_data({"cancel": self.ask["signal"]})
                         if response_idx >= 0:
-                            self.ros.send_ctrl_data({self.ask["signal"]: self.ask["values"][response_idx]})
+                            self.ros.send_ctrl_data({self.ask["signal"]: int(self.ask["values"][response_idx])})
                         self.ask_converse = False
                         if "confirm" in self.ask:
                             self.speak("%s." % response)
