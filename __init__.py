@@ -128,18 +128,24 @@ class Mkz(MycroftSkill):
         self.ask = {}
         self.ask_cancel = ("cancel", "shut up", "stop")
         self.ask_converse = False
+        self.control = {}
         self.ad={}
         self.ad["control"] = {"power": "off", "system": "off", "autonomy": "disabled", "doors": "locked", "gear": "in park"}
         self.ad["operation"] = {"power": "okay", "compute": "okay", "vehicle": "okay", "sensors": "okay", "tires": "okay", "network": "okay"}
         self.ad_status_announce = True
         self.rclpy_init()
         self.ros = RosBridge(self)
+        self.schedule_repeating_event(self.keep_active, None, 60)
         #self.rclpy_activate()
 
     def shutdown(self):
         self.log.info("skill.shutdown")
         self.cancel_all_repeating_events()
         self.rclpy_shutdown()
+
+    def keep_active(self):
+        self.log.info('skill.keep_active:')
+        self.make_active()
 
     def converse(self, message=None):
         if message and self.ask_converse:
@@ -182,8 +188,8 @@ class Mkz(MycroftSkill):
                     #response = "#cancel"
                     #self.ros.send_ctrl_data({self.ask["signal"]: response})
                     self.ask_converse = False
-                if self.ask_converse:
-                    self.make_active()
+                #if self.ask_converse:
+                    #self.make_active()
                 return True
             else:
                 self.log.info('skill.converse: no question (%d)' % self.ask_converse)
@@ -239,8 +245,8 @@ class Mkz(MycroftSkill):
             self.speak_dialog(self.ask["dialog"], expect_response=True)
         else:
             self.ask_converse = False
-        if self.ask_converse:
-            self.make_active()
+        #if self.ask_converse:
+            #self.make_active()
         return self.ask_converse
 
     @intent_file_handler('mkz.intent')
