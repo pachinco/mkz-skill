@@ -177,7 +177,7 @@ class Mkz(MycroftSkill):
                     elif "dialog" in self.ask:
                         self.speak_dialog(self.ask["dialog"], expect_response=True)
                 else:
-                    self.log.info('skill.converse: out of retries'))
+                    self.log.info('skill.converse: out of retries')
                     #self.ros.send_cmd_data({"cancel": self.ask["signal"]})
                     #response = "#cancel"
                     #self.ros.send_ctrl_data({self.ask["signal"]: response})
