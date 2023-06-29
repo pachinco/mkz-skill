@@ -163,6 +163,7 @@ class Mkz(MycroftSkill):
                             self.ros.send_ctrl_data({self.ask["signal"]: int(self.ask["values"][response_idx])})
                         self.ask_converse = False
                         if "confirm" in self.ask:
+                            self.log.info('skill.converse: confirm %s:%s' % (response, self.ask["confirm"]))
                             self.speak("%s." % response)
                             self.speak_dialog(self.ask["confirm"])
                         return True
