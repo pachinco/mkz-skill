@@ -152,10 +152,14 @@ class Mkz(MycroftSkill):
                     response = message.data["utterances"][0]
                     if response in self.ask_cancel or response in self.ask["options"]:
                         self.log.info('skill.converse: %s:%s' % (self.ask["signal"], response))
+                        response_idx = -1
                         if response in self.ask_cancel:
-                            response = "#cancel"
+                            response = self.ask["options"][0]
+                            response = 0
+                        else:
+                            response_idx = self.ask["options"].index(response)
                         #self.ros.send_cmd_data({"cancel": self.ask["signal"]})
-                        self.ros.send_ctrl_data({self.ask["signal"]: response})
+                        self.ros.send_ctrl_data({self.ask["signal"]: response_idx})
                         self.ask_converse = False
                         if "confirm" in self.ask:
                             self.speak("%s." % response)
@@ -216,6 +220,10 @@ class Mkz(MycroftSkill):
             self.ask["confirm"] = None
         if "options" in self.ask:
             self.ask["options"] = v["options"].lower().split("|")
+        else:
+            return False
+        if "values" in self.ask:
+            self.ask["values"] = v["values"].lower().split("|")
         else:
             return False
         self.ask_converse = True
