@@ -56,7 +56,7 @@ class RosBridge(Node):
         for k,v in c.items():
             self.log.info('ros.sub_ctrl_rcv: %s:%s' % (k, v))
             if self.skill.ask:
-                self.skill.voice_ask_cancel(v)
+                self.skill.voice_ask_cancel(k)
                 #self.log.info('ros.sub_ctrl_rcv: signal %s:%s' % (k, v))
 
     def rclpy_spin_once(self):
