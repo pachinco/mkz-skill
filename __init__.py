@@ -214,11 +214,11 @@ class Mkz(MycroftSkill):
         if "value" not in self.signal[signal]:
             self.signal[signal]["value"] = 0
 
-    def speak_value(self, k, v):
+    def change_value(self, k, v):
         o = self.signal[k]["value"]
         self.signal[k]["value"] = v
         t = self.signal[k]["type"]
-        self.log.info('skill.speak_value: %s=%d (%d)' % (k, v, o))
+        self.log.info('skill.change_value: %s=%d (%d)' % (k, v, o))
         vs = ""
         #if t in {"Dial", "Slider", "Gauge", "Tacho"}:
             #vs = String(v)
