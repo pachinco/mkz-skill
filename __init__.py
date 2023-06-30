@@ -223,12 +223,12 @@ class Mkz(MycroftSkill):
         #if t in {"Dial", "Slider", "Gauge", "Tacho"}:
             #vs = String(v)
         if t in {"Delay", "Toggle", "Tumbler", "Radio"}:
-            vs = self.signal[k]["options"].split("|")[v].lower()
+            vs = self.signal[k]["options"].split("|")[v].capitalize()
         elif t in {"Switch", "Led"}:
             vs = String(v)
         else:
             vs = String(v)
-        self.speak('%s changed to %s' % (self.signal[k]["title"], vs))
+        self.speak('%s changed to %s.' % (self.signal[k]["title"], vs))
 
     def voice_ask_cancel(self, v):
         self.log.info('skill.voice_ask_cancel: "%s"' % v)
