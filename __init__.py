@@ -217,6 +217,8 @@ class Mkz(MycroftSkill):
     def change_value(self, k, v):
         o = self.signal[k]["value"]
         self.signal[k]["value"] = v
+        if o == v:
+            return
         t = self.signal[k]["type"]
         self.log.info('skill.change_value: %s=%d (%d)' % (k, v, o))
         vs = ""
