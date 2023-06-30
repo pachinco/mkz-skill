@@ -226,7 +226,7 @@ class Mkz(MycroftSkill):
             vs = self.signal[k]["options"].split("|")[v]
         elif t in {"Switch", "Led"}:
             vs = String(v)
-        else
+        else:
             vs = String(v)
         self.speak('%s changed to %s' % (self.signal[k]["options"]["title"], vs))
 
