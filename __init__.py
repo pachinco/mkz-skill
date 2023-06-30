@@ -43,6 +43,8 @@ class RosBridge(Node):
             if k == "ask":
                 if not self.skill.voice_ask_options(v):
                     break
+            elif k == "add":
+                self.skill.control_add(v)
             elif k == "speak":
                 self.skill.speak(v)
             elif k == "dialog":
@@ -58,6 +60,8 @@ class RosBridge(Node):
             if self.skill.ask:
                 self.skill.voice_ask_cancel(k)
                 #self.log.info('ros.sub_ctrl_rcv: signal %s:%s' % (k, v))
+            if k in self.signal:
+                self.skill.change_value(k, v)
 
     def rclpy_spin_once(self):
         rclpy.spin_once(self, timeout_sec=0)
@@ -128,7 +132,9 @@ class Mkz(MycroftSkill):
         self.ask = {}
         self.ask_cancel = ("cancel", "shut up", "stop")
         self.ask_converse = False
+        self.control_types = {"Dial", "Delay", "Toggle", "Slider", "Tumbler", "Radio", "Switch"}
         self.control = {}
+        self.signal = {}
         self.ad={}
         self.ad["control"] = {"power": "off", "system": "off", "autonomy": "disabled", "doors": "locked", "gear": "in park"}
         self.ad["operation"] = {"power": "okay", "compute": "okay", "vehicle": "okay", "sensors": "okay", "tires": "okay", "network": "okay"}
@@ -199,18 +205,28 @@ class Mkz(MycroftSkill):
                     return True
         return False
 
-    def voice_validator(self, utterance):
-        self.log.info('skill.voice_validator: options=%s ? %s / %s' % (utterance, self.ask["options"], self.ask_cancel))
-        #if self.ask["response"] or self.ask["options"] == "":
-            #return True
-        if utterance:
-            return utterance in self.ask_cancel or utterance in self.ask["options"]
-        return False
+    def control_add(self, v):
+        self.log.info('skill.control_add: "%s"' % v)
+        #self.control[v["title"]] = v
+        signal = v["signal"]
+        title = v["title"]
+        self.signal[signal] = v
+        if "value" not in self.signal[signal]:
+            self.signal[signal]["value"] = 0
 
-    def voice_on_fail(self, utterance):
-        if utterance:
-            return '%s, is not an option. Please say a valid option.' % utterance
-        return 'Sorry I didn\'t understand. Please say a valid option.'
+    def speak_value(self, k, v):
+        o = self.signal[k]["value"]
+        self.signal[k]["value"] = v
+        t = self.signal[k]["type"]
+        self.log.info('skill.speak_value: %s=%d (%d)' % (k, v, o))
+        vs = ""
+        if t in {"Dial", "Slider", "Gauge", "Tacho"}:
+            vs = String(v)
+        elif t in {"Delay", "Toggle", "Tumbler", "Radio"}:
+            vs = self.signal[k]["options"].split("|")[v]
+        else t in {"Switch", "Led"}:
+            vs = String(v)
+        self.speak('%s changed to %s' % (self.signal[k]["options"]["title"], vs))
 
     def voice_ask_cancel(self, v):
         self.log.info('skill.voice_ask_cancel: "%s"' % v)
