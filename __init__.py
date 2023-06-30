@@ -223,7 +223,7 @@ class Mkz(MycroftSkill):
         #if t in {"Dial", "Slider", "Gauge", "Tacho"}:
             #vs = String(v)
         if t in {"Delay", "Toggle", "Tumbler", "Radio"}:
-            vs = self.signal[k]["options"].split("|")[v]
+            vs = self.signal[k]["options"].split("|")[v].lower()
         elif t in {"Switch", "Led"}:
             vs = String(v)
         else:
