@@ -220,11 +220,13 @@ class Mkz(MycroftSkill):
         t = self.signal[k]["type"]
         self.log.info('skill.speak_value: %s=%d (%d)' % (k, v, o))
         vs = ""
-        if t in {"Dial", "Slider", "Gauge", "Tacho"}:
-            vs = String(v)
-        elif t in {"Delay", "Toggle", "Tumbler", "Radio"}:
+        #if t in {"Dial", "Slider", "Gauge", "Tacho"}:
+            #vs = String(v)
+        if t in {"Delay", "Toggle", "Tumbler", "Radio"}:
             vs = self.signal[k]["options"].split("|")[v]
-        else t in {"Switch", "Led"}:
+        elif t in {"Switch", "Led"}:
+            vs = String(v)
+        else
             vs = String(v)
         self.speak('%s changed to %s' % (self.signal[k]["options"]["title"], vs))
 
