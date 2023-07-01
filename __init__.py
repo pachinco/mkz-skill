@@ -102,7 +102,8 @@ class RosBridge(Node):
 class Mkz(MycroftSkill):
     def __init__(self):
         MycroftSkill.__init__(self)
-        self.sound_file_path = Path(__file__).parent.joinpath("sounds", "mkz-welcome-chime2.wav")
+        self.greeting = True
+        #self.sound_file_path = Path(__file__).parent.joinpath("sounds", "mkz-welcome-chime2.wav")
 
     def rclpy_init(self):
         self.log.info("skill.rclpy_init");
@@ -124,6 +125,9 @@ class Mkz(MycroftSkill):
 
     def initialize(self):
         self.log.info("skill.initialize");
+        if self.greeting:
+            self.speak_dialog("greeting")
+            self.greeting = False
         self.uiIdxKeys = {"none": 0, "map": 2, "maps": 3, "addresses": 4, "address": 4, "rolodex": 4, "locations": 4, "status": 8, "diagnostics": 8, "control": 16, "controls": 16, "media": 32, "music": 32, "weather": 64, "news": 128}
         self.uiIdxStickyKeys = ["sticky", "hold", "permanent"]
         self.ui={}
