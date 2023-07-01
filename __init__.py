@@ -125,9 +125,6 @@ class Mkz(MycroftSkill):
 
     def initialize(self):
         self.log.info("skill.initialize");
-        if self.greeting:
-            self.speak_dialog("greeting")
-            self.greeting = False
         self.uiIdxKeys = {"none": 0, "map": 2, "maps": 3, "addresses": 4, "address": 4, "rolodex": 4, "locations": 4, "status": 8, "diagnostics": 8, "control": 16, "controls": 16, "media": 32, "music": 32, "weather": 64, "news": 128}
         self.uiIdxStickyKeys = ["sticky", "hold", "permanent"]
         self.ui={}
@@ -279,7 +276,12 @@ class Mkz(MycroftSkill):
     @intent_file_handler('mkz.intent')
     def handle_demo_urban_mkz(self, message):
         self.cancel_all_repeating_events()
-        self.speak_dialog('mkz', wait=True)
+        if self.greeting:
+            self.speak_dialog("greeting")
+            self.greeting = False
+        else:
+            self.speak_dialog("reinit")
+        #self.speak_dialog('greeting')
         self.rclpy_activate()
 
     #@intent_file_handler('status.ad.mkz.intent')
