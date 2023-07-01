@@ -230,9 +230,9 @@ class Mkz(MycroftSkill):
             else:
                 vs = self.signal[k]["options"].split("|")[v].capitalize()
         elif t in {"Switch", "Led"}:
-            vs = String(v)
+            vs = str(v)
         else:
-            vs = String(v)
+            vs = str(v)
         self.speak('%s %s.' % (self.signal[k]["title"], vs))
 
     def voice_ask_cancel(self, v):
