@@ -233,7 +233,7 @@ class Mkz(MycroftSkill):
             vs = String(v)
         else:
             vs = String(v)
-        self.speak('%s changed to %s.' % (self.signal[k]["title"], vs))
+        self.speak('%s %s.' % (self.signal[k]["title"], vs))
 
     def voice_ask_cancel(self, v):
         self.log.info('skill.voice_ask_cancel: "%s"' % v)
