@@ -123,6 +123,9 @@ class Mkz(MycroftSkill):
     def rclpy_activate(self):
         self.schedule_repeating_event(self.ros.rclpy_spin_once, None, 0.1)
 
+    def keep_alive_activate(self):
+        self.schedule_repeating_event(self.keep_active, None, 60)
+
     def initialize(self):
         self.log.info("skill.initialize");
         self.uiIdxKeys = {"none": 0, "map": 2, "maps": 3, "addresses": 4, "address": 4, "rolodex": 4, "locations": 4, "status": 8, "diagnostics": 8, "control": 16, "controls": 16, "media": 32, "music": 32, "weather": 64, "news": 128}
@@ -142,8 +145,8 @@ class Mkz(MycroftSkill):
         self.ad_status_announce = True
         self.rclpy_init()
         self.ros = RosBridge(self)
-        self.schedule_repeating_event(self.keep_active, None, 60)
-        #self.rclpy_activate()
+        self.rclpy_activate()
+        self.keep_alive_activate()
 
     def shutdown(self):
         self.log.info("skill.shutdown")
@@ -281,8 +284,8 @@ class Mkz(MycroftSkill):
             self.greeting = False
         else:
             self.speak_dialog("reinit")
-        #self.speak_dialog('greeting')
         self.rclpy_activate()
+        self.keep_alive_activate()
 
     #@intent_file_handler('status.ad.mkz.intent')
     #def handle_ad_status_mkz(self, message):
