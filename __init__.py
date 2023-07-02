@@ -55,7 +55,8 @@ class RosBridge(Node):
 
     def sub_ctrl_rcv(self, msg):
         self.log.info('ros.sub_ctrl_rcv: "%s"' % msg.data)
-        c = json.loads(msg.data.replace("'", '"'))
+        c = json.loads(msg.data)
+        #c = json.loads(msg.data.replace("'", '"'))
         for k,v in c.items():
             self.log.info('ros.sub_ctrl_rcv: %s:%s' % (k, v))
             if self.skill.ask:
@@ -236,6 +237,7 @@ class Mkz(MycroftSkill):
                 vs = self.signal[k]["options"].split("|")[v].capitalize()
         elif t in {"Switch", "Led"}:
             vs = str(v)
+            return
         else:
             vs = str(v)
         self.speak('%s %s.' % (self.signal[k]["title"], vs))
