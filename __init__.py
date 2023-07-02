@@ -226,7 +226,7 @@ class Mkz(MycroftSkill):
         if o == v:
             return
         t = self.signal[k]["type"]
-        self.log.info('skill.change_value: %s=%d (%d)' % (k, v, o))
+        self.log.info('skill.change_value: %s: %s=%d (%d)' % (t, k, v, o))
         vs = ""
         #if t in {"Dial", "Slider", "Gauge", "Tacho"}:
             #vs = String(v)
