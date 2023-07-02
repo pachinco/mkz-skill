@@ -41,16 +41,16 @@ class RosBridge(Node):
         #c = json.loads(msg.data.replace("'", '"'))
         for k,v in c.items():
             self.log.info('ros.sub_cmd_rcv: %s:%s' % (k, v))
-            if k == "ask":
+            if k == "user_ask":
                 if not self.skill.voice_ask_options(v):
                     break
-            elif k == "add":
+            elif k == "control_add":
                 self.skill.control_add(v)
             elif k == "speak":
                 self.skill.speak(v)
             elif k == "dialog":
                 self.skill.speak_dialog(v)
-            elif k == "cancel":
+            elif k == "user_cancel":
                 self.skill.voice_ask_cancel(v)
 
     def sub_ctrl_rcv(self, msg):
